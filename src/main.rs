@@ -3,7 +3,6 @@ use std::env::var;
 use std::io::{BufRead, BufReader};
 
 use hashbrown::HashMap;
-use slab::Slab; //stable indicies
 mod shared;
 use shared::FastVec;
 
@@ -36,9 +35,6 @@ fn main() -> Result<(),std::io::Error> {
     println!("hello");
     // Slabs | id, String | Entry n
     // Hashmap| id, Entry -> Slab1.entry(n) & Slab2.entry(n)
-    let mut slab_works: Slab<u8> = Slab::new(); //workspace
-    let mut slab_ids: Slab<String> = Slab::new(); //winid
-    let mut slab_content: Slab<(String,String)> = Slab::new(); //(initialtitle,initialclass)
     let mut map: HashMap<String,(u8,u8,u8)> = HashMap::new();  //workspace, vector index, slab index
 
     //for id sorting
@@ -65,18 +61,7 @@ let sock: String =         format!(
                         let [id, workspace, initialclass, initialtitle]: [&str; 4] = parts.try_into().expect("not 4 arguments in openwindow");            
                         let workspace: u8 = workspace.parse().expect("workspace in openwindow is not u8");                    
                         let (id,initialclass, initialtitle): (String,String,String) = (id.to_string(),initialclass.to_string(),initialtitle.to_string());
-                        let slab_index = slab_works.insert(workspace.clone());
-                        slab_ids.insert(id.clone());
-                        slab_content.insert((initialtitle,initialclass));
-                        let vec = ordered_map.entry(workspace).or_insert_with(Vec::new);
-                        let vec_index = vec.len() as u8; 
-                        vec.push(id.clone());  
-                        map.insert(id, (workspace, vec_index.clone(),slab_index as u8));
-                        println!("created:{}",vec_index);
-                        println!("{}",vec.len());
-                        for (k,v) in slab_ids.iter(){
-                            println!("({},{}) ",k,v);
-                        }
+                       
 
                         //data.format();
                     }
@@ -84,24 +69,7 @@ let sock: String =         format!(
                     "closewindow" => { // closewindow>>55c018ac1aa0    
                         let id:&str = value;
                         let (workspace,r_vec_index,slab_index) = map.remove(id).unwrap();
-                        slab_works.remove(slab_index as usize);
-                        slab_ids.remove(slab_index as usize);
-                        slab_content.remove(slab_index as usize);
-                        
-                        let vec = ordered_map.get_mut(&workspace).unwrap();
-
-                        if vec.len() as u8 - 1 != r_vec_index {                        
-                        vec.swap_remove(r_vec_index as usize);
-                        let lasts_id = vec.get(r_vec_index as usize).unwrap();
-                        let (workspace, vec_index, slab_index) = map.get_mut(lasts_id).unwrap();
-                        *vec_index = r_vec_index;                                                                        
-                        }else{vec.pop();};
-                        
-                        println!("removed:{}",r_vec_index);
-                        println!("{}",vec.len());
-                        for (k,v) in slab_ids.iter(){
-                            println!("({},{}) ",k,v);
-                        }
+                       
 
 
                         //data.format();    
