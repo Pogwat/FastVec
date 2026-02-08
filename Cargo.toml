@@ -1,0 +1,19 @@
+[package]
+name = "testing"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hashbrown = "=0.7.2"
+slab = "0.4.11"
+
+[profile.release]
+opt-level = "z"   # Optimize for size
+lto = true #remove unessecary code
+strip = true # strip debug symbols
+codegen-units = 1 #split crate into multipe compile units
+panic = "abort" # remove panic code
+
+[features]
+Sort = []
+FastRemove = []
