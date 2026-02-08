@@ -250,10 +250,13 @@ pub trait Insertable: Clone + Hash + Eq {}
         Ok(key)
     }    
 
-    fn fastvec_remove_by_key<V: Insertable>( vec:&mut Vec<V>, map: &mut HashMap<V, usize>, key: usize) -> V {
+    fn fastvec_remove_by_key<V: Insertable>( vec:&mut Vec<V>, map: &mut HashMap<V, usize>, key: usize) -> Result<V,Errors> {
+        let last_index = vec.len()-1;
+        if key <= last_index {
         let value = vec.remove(key); //V
         map.remove(&value);
-        value
+        Ok(value)}
+         else {return Err(Errors::KeyOutOfBounds)}
     }
 
     //Refrence
@@ -319,7 +322,7 @@ pub trait Insertable: Clone + Hash + Eq {}
 
     //REMOVES
 
-    pub     fn remove_by_key(&mut self, key:usize) -> V {
+    pub     fn remove_by_key(&mut self, key:usize) -> Result<V,Errors> {
                 fastvec_remove_by_key(&mut self.vector, &mut self.map, key)
             }
 
@@ -344,7 +347,3 @@ pub trait Insertable: Clone + Hash + Eq {}
     impl<V:Hash + Eq + Clone + Ord, B:Ord> SortedFastVec<V,B> {
 
     }
-
-
-
-

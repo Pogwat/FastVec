@@ -10,13 +10,13 @@ At the moment here are the functons this has:
 new() -> Self
 iter(&self) -> VIter<'_,V>
 index(&self, index: usize) -> &Self::Output
-get_by_key(&self, key:usize) -> Option<&V>
-get_by_value(&self, value:&V) -> Option<usize>
+get_by_key(&self, key:usize) -> Result<V,Errors>
+get_by_value(&self, value:&V) -> Result<usize, Errors>
 mod_by_key(&mut self, key:usize, newvalue:V) -> Result<V,Errors>
 mod_by_value(&mut self,value:&V,newval:V) -> Result<V,Errors>
 push(&mut self, value:V) -> Option<usize>
 insert(& mut self,key:usize, value:V) -> Result<(),Errors>
-remove_by_key(&mut self, key:usize) -> V
+remove_by_key(&mut self, key:usize) -> Result<V,Errors>
 remove_by_value(&mut self, value:&V) -> Result<usize, Errors>
 swap_remove_by_key(&mut self, key:usize) -> Result<V,Errors>
 swap_remove_by_value(&mut self, value:&V) -> Result<usize,Errors> 
