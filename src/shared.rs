@@ -1,9 +1,9 @@
 use hashbrown::HashMap;
-use std::hash::Hash;
-use std::fmt;
+use core::hash::Hash;
+use core::fmt;
 use core::cmp::Ordering;
 use core::mem;
-use std::ops::Index;
+use core::ops::Index;
 #[cfg(feature = "Sort")]  use std::collections::BTreeMap;
 //Need derive for custom fields from a struct, So only sorrting by one value now
 //using cfg logic with diffrent types and impl is nightmare, No struct<V,B> for me
@@ -31,7 +31,7 @@ use std::ops::Index;
 
 //ARGS AND TRAIT BOUNDS
 
-    trait Insertable: Clone + Hash + Eq {}
+pub trait Insertable: Clone + Hash + Eq {}
 
     impl<T: Clone + Hash + Eq> Insertable for T {}
 
@@ -45,6 +45,8 @@ use std::ops::Index;
         #[cfg(feature = "Sort")] btreemap: Option<BTreeMap<B,Vec<usize>> >,
         #[cfg(feature = "Sort")] sortvalue: Option< B >
     }
+
+//all of this could just be wrappers around Vec trait impls
 
 //ITER
     pub struct VIter<'a,V> {
@@ -84,7 +86,7 @@ use std::ops::Index;
 //FORMATING
     impl<V: std::fmt::Display  + std::fmt::Debug> std::fmt::Display for FastVec<V> {
         fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-             f.debug_list().entries(self.vector.iter()).finish()
+            f.debug_list().entries(self.vector.iter()).finish()
         }
 }
 
@@ -115,12 +117,12 @@ use std::ops::Index;
 
     //GETS
 
-    fn get_by_key<V:Insertable>(vec: &Vec<V>, key:usize) -> Option<&V>{
-        vec.get(key)
+    fn get_by_key<V:Insertable>(vec: &Vec<V>, key:usize) -> Result<V,Errors>{
+        Ok(vec.get(key).ok_or(Errors::KeyOutOfBounds)?.clone())
     }
 
-    fn get_by_value<V:Insertable>(map: &HashMap<V,usize>, value:&V) -> Option<usize> {
-        map.get(value).as_deref().clone().copied()
+    fn get_by_value<V:Insertable>(map: &HashMap<V,usize>, value:&V) -> Result<usize,Errors> {
+        Ok(map.get(value).ok_or(Errors::ValueOutOfBounds)?.clone())
     }
     #[cfg(feature = "Sort")] 
     fn get_sort_keys<'a,V:Insertable,B:Ord>(btree:&'a BTreeMap<B,Vec<usize> >, sortval: &B) -> Option<&'a Vec<usize>>{ 
@@ -134,6 +136,7 @@ use std::ops::Index;
         .collect();
         Some(vals)
     }
+    
     #[cfg(feature = "Sort")]
     fn get_sort_values<V:Insertable,B:Ord>(vec:&Vec<V>, btree:&BTreeMap<B, Vec<usize> >, sortval: &B) -> Option<Vec<V>>{
         let keys: &Vec<usize> = get_sort_keys::<V, B>(btree, sortval)?;
@@ -288,11 +291,11 @@ use std::ops::Index;
 
     //GETS
 
-    pub     fn get_by_key(&self, key:usize) -> Option<&V> {
+    pub     fn get_by_key(&self, key:usize) -> Result<V,Errors> {
                 get_by_key(&self.vector, key)
             }
 
-    pub     fn get_by_value(&self, value:&V) -> Option<usize> {
+    pub     fn get_by_value(&self, value:&V) -> Result<usize, Errors> {
                 get_by_value(&self.map, value)       
             }
 
