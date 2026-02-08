@@ -3,6 +3,7 @@ use std::hash::Hash;
 use std::fmt;
 use core::cmp::Ordering;
 use core::mem;
+use std::ops::Index;
 #[cfg(feature = "Sort")]  use std::collections::BTreeMap;
 //Need derive for custom fields from a struct, So only sorrting by one value now
 //using cfg logic with diffrent types and impl is nightmare, No struct<V,B> for me
@@ -68,6 +69,16 @@ use core::mem;
             VIter { data: &self.vector, index: 0 }
         }
     }
+
+//INDEX
+
+impl<V> Index<usize> for FastVec<V> {
+    type Output = V;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.vector[index]
+    }
+}
 
 //ERRORS
     #[derive(Debug)]
