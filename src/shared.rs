@@ -44,6 +44,31 @@ use core::mem;
         #[cfg(feature = "Sort")] sortvalue: Option< B >
     }
 
+//ITER
+    pub struct VIter<'a,V> {
+        data: &'a [V],
+        index: usize,
+    }
+
+    impl<'a,V> Iterator for VIter<'a,V> {
+        type Item = &'a V;
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.index < self.data.len() {
+                let value = &self.data[self.index];
+                self.index += 1;
+                Some(value)
+            } else {
+                None
+            }
+        }
+    }
+
+    impl <V:Hash + Eq + Clone + Ord> FastVec<V> {
+        pub fn iter(&self) -> VIter<'_,V> {
+            VIter { data: &self.vector, index: 0 }
+        }
+    }
+
 //ERRORS
     #[derive(Debug)]
     pub enum Errors {
@@ -98,31 +123,25 @@ use core::mem;
 
     //INSERTS
 
-    fn vec_mod_key<V:Insertable>(vec: &mut Vec<V>,key:usize, newvalue:V) -> Result<V,Errors>{ //modify key's value and returns old value, consumes newvalue
+    //modify key's value and returns old value, consumes newvalue
+    fn vec_mod_key<V:Insertable>(vec: &mut Vec<V>,key:usize, newvalue:V) -> Result<V,Errors>{ 
         let last_index = vec.len()-1;
         if key<=last_index {
-            let old_value = core::mem::replace(&mut vec[key], newvalue);
+            let old_value = mem::replace(&mut vec[key], newvalue);
             Ok(old_value)
         }else {return Err(Errors::KeyOutOfBounds)}
 
     }
-
-    fn fastvec_mod_by_value<V:Insertable>( //change value, return old 
-        vec: &mut Vec<V>,
-        map: &mut HashMap<V,usize>,
-        value:&V,
-        newval:V) -> Result<V,Errors> 
-        {
+    
+    //change value, return old 
+    fn fastvec_mod_by_value<V:Insertable>( vec: &mut Vec<V>,map: &mut HashMap<V,usize>,value:&V,newval:V) -> Result<V,Errors> {
         let key = map.remove(value).ok_or(Errors::ValueOutOfBounds)?;
         map.insert(newval.clone(),key);
         vec_mod_key(vec,key,newval)
         }
 
-    fn fastvec_mod_by_key<V:Insertable>( //change value, return old
-        vec: &mut Vec<V>,
-        map: &mut HashMap<V,usize>,
-        key:usize,
-        newval:V) -> Result<V,Errors> {
+    //change value, return old
+    fn fastvec_mod_by_key<V:Insertable>( vec: &mut Vec<V>,map: &mut HashMap<V,usize>,key:usize,newval:V) -> Result<V,Errors> {
         let old_value = vec_mod_key(vec,key,newval.clone())?;
         map.remove(&old_value);
         map.insert(newval,key);
@@ -176,7 +195,7 @@ use core::mem;
                     return Err(Errors::KeyOutOfBounds)
                 }
             }
-        }
+    }
 
     fn fastvec_swap_remove_key<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, key:usize) -> Result<V,Errors> { //removed_value 
         let (removed_value, new_value) = swap_remove_by_key_old_new(vec,key)?;

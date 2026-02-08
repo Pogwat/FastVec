@@ -21,6 +21,10 @@ fn main() -> Result<(),std::io::Error> {
     println!("hii is at: {}", fv.get_by_value(&"hii".to_string()).unwrap());
     
     println!("old is {}, new is {}", fv.mod_by_key(1, "6767".to_string()).unwrap(), fv.get_by_key(1).unwrap());
+    
+    for item in fv.iter() {
+        println!("{}",item);
+    }
     //let prr= fv.get_by_key(10).unwrap();
     //println!("{}", prr);
     std::process::exit(0);
