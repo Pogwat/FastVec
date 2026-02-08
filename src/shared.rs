@@ -11,6 +11,7 @@ use std::ops::Index;
 //STRUCTS
 
     #[allow(dead_code)]
+    #[derive(Debug)]
     pub struct FastVec<V> {
         pub   vector: Vec<V> ,//key, value
         pub   map: HashMap<V, usize>, //value, key
@@ -53,6 +54,7 @@ use std::ops::Index;
 
     impl<'a,V> Iterator for VIter<'a,V> {
         type Item = &'a V;
+
         fn next(&mut self) -> Option<Self::Item> {
             if self.index < self.data.len() {
                 let value = &self.data[self.index];
@@ -71,13 +73,24 @@ use std::ops::Index;
     }
 
 //INDEX
+    impl<V> Index<usize> for FastVec<V> {
+        type Output = V;
 
-impl<V> Index<usize> for FastVec<V> {
-    type Output = V;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.vector[index]
+        fn index(&self, index: usize) -> &Self::Output {
+            &self.vector[index]
+        }
     }
+
+//FORMATING
+    impl<V: std::fmt::Display> std::fmt::Display for FastVec<V> {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "[")?;
+            for (i, item) in self.vector.iter().enumerate() {
+                if i > 0 { write!(f, ", ")?; }
+                write!(f, "{}", item)?;
+            }
+            write!(f, "]")
+        }
 }
 
 //ERRORS

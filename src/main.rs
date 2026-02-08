@@ -25,7 +25,9 @@ fn main() -> Result<(),std::io::Error> {
     for item in fv.iter() {
         println!("{}",item);
     }
-    println!("one is:{}", fv[1]);
+    println!("one is: {}", fv[1]);
+    println!("elements: {}", fv);
+    println!("full: {:?}", fv);
     //let prr= fv.get_by_key(10).unwrap();
     //println!("{}", prr);
     std::process::exit(0);
