@@ -82,14 +82,9 @@ use std::ops::Index;
     }
 
 //FORMATING
-    impl<V: std::fmt::Display> std::fmt::Display for FastVec<V> {
+    impl<V: std::fmt::Display  + std::fmt::Debug> std::fmt::Display for FastVec<V> {
         fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-            write!(f, "[")?;
-            for (i, item) in self.vector.iter().enumerate() {
-                if i > 0 { write!(f, ", ")?; }
-                write!(f, "{}", item)?;
-            }
-            write!(f, "]")
+             f.debug_list().entries(self.vector.iter()).finish()
         }
 }
 
