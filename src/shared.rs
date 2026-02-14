@@ -300,8 +300,13 @@ pub trait Insertable: Clone + Hash + Eq {}
                     refvec: Vec::with_capacity(size)
                 }
             } 
+    //Wrappers
+    pub const fn len(&self)-> usize {self.vector.len()}
+    pub const fn capacity(&self) -> usize {self.vector.capacity()}
+    pub fn reserve(&mut self, additional: usize){
+        &mut self.vector.reserve(additional);
+        &mut self.map.reserve(additional);}
 
-    pub     fn len(&self)-> usize {self.vector.len()}
 
     //GETS
 

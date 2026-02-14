@@ -23,6 +23,9 @@ fn main() -> Result<(),Errors>{
     println!("elements: {}", fv); //elements: ["hi", "6767"]
     println!("full: {:?}", fv); //full: FastVec { vector: ["hi", "6767"], map: {"6767": 1, "hi": 0} }
     println!("len is {}", fv.len());
+    println!("capacity is {}",fv.capacity());
+    fv.reserve(12);
+    println!("new capacity is {}",fv.capacity());
     Ok(())
 }
 

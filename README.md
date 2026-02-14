@@ -10,8 +10,11 @@ At the moment here are the functons this has:
 new() -> Self
 with_capacity(size: usize) -> Self
 len(&self)-> usize
+capacity(&self) -> usize 
+reserve(&mut self, additional: usize)
 iter(&self) -> VIter<'_,V>
 index(&self, index: usize) -> &Self::Output
+
 get_by_key(&self, key:usize) -> Result<V,Errors>
 get_by_value(&self, value:&V) -> Result<usize, Errors>
 mod_by_key(&mut self, key:usize, newvalue:V) -> Result<V,Errors>
