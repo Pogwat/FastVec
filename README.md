@@ -8,6 +8,8 @@ Since this is super experimental funciton names might change and some funcitons 
 At the moment here are the functons this has:
 ```rust 
 new() -> Self
+with_capacity(size: usize) -> Self
+len(&self)-> usize
 iter(&self) -> VIter<'_,V>
 index(&self, index: usize) -> &Self::Output
 get_by_key(&self, key:usize) -> Result<V,Errors>
