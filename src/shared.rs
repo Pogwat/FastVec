@@ -84,8 +84,8 @@ pub trait Insertable: Clone + Hash + Eq {}
     }
 
 //FORMATING
-    impl<V: std::fmt::Display  + std::fmt::Debug> std::fmt::Display for FastVec<V> {
-        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    impl<V: fmt::Display  + fmt::Debug> fmt::Display for FastVec<V> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             f.debug_list().entries(self.vector.iter()).finish()
         }
 }
@@ -110,7 +110,7 @@ pub trait Insertable: Clone + Hash + Eq {}
     
     //CHECKS
 
-    fn key_bounds<T>(vec:&Vec<T>, key:usize) -> Ordering{
+    fn key_bounds<T>(vec:&Vec<T>, key:usize) -> Ordering{ //probably dont need a fucntion for something this simple
         let last_index = vec.len()-1;
         key.cmp(&last_index)
     }
@@ -210,8 +210,7 @@ pub trait Insertable: Clone + Hash + Eq {}
                 }
                 Ordering::Equal => {
                     let old_value = vec.pop().ok_or(Errors::KeyOutOfBounds)?; //Last
-                    let new_value = None;
-                    return Ok((old_value,new_value))
+                    return Ok((old_value,None))
                 }
                 Ordering::Greater => {
                     return Err(Errors::KeyOutOfBounds)
@@ -222,41 +221,42 @@ pub trait Insertable: Clone + Hash + Eq {}
     fn fastvec_swap_remove_key<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, key:usize) -> Result<V,Errors> { //removed_value 
         let (removed_value, new_value) = swap_remove_by_key_old_new(vec,key)?;
         map.remove(&removed_value);
-        if let Some(value) = new_value {
+        if let Some(value) = new_value { //A None value would occur if key=last index, this is valid and shouldnt return error, just remove from the map
             map.insert(value, key);
         }
-        else {
-            return Err(Errors::ValueOutOfBounds)
-        };
+        // else {
+        //     return Err(Errors::ValueOutOfBounds)
+        // };
 
         Ok(removed_value)
     }
 
     fn fastvec_swap_remove_value<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, value:&V) -> Result<usize,Errors>{ //removed_key
         let key:usize = map.remove(value).ok_or(Errors::ValueOutOfBounds)?;
-        let (_, new_value) = swap_remove_by_key_old_new(vec,key)?; 
-        if let Some(value) = new_value {
-            map.insert(value, key)
-        } 
-        else {
-            return Err(Errors::KeyOutOfBounds)
-        };
+        if let (_, Some(new_value)) = swap_remove_by_key_old_new(vec,key)? {  //A None value would occur if key=last index, this is valid and shouldnt return error, just remove from the map
+        map.insert(new_value, key);
+        }
+        // else {
+        //     return Err(Errors::KeyOutOfBounds)
+        // };
         Ok(key)
     }
 
     fn fastvec_remove_by_value<V: Insertable>( vec:&mut Vec<V>, map: &mut HashMap<V, usize>, value: &V) ->  Result<usize, Errors>{
         let key = map.remove(value).ok_or(Errors::ValueOutOfBounds)?; //Option<V>
+        if let Ordering::Equal | Ordering::Less = key_bounds(vec,key) {
         vec.remove(key); 
         Ok(key)
+        } else {return Err(Errors::KeyOutOfBounds)}
+        
     }    
 
     fn fastvec_remove_by_key<V: Insertable>( vec:&mut Vec<V>, map: &mut HashMap<V, usize>, key: usize) -> Result<V,Errors> {
-        let last_index = vec.len()-1;
-        if key <= last_index {
-        let value = vec.remove(key); //V
-        map.remove(&value);
-        Ok(value)}
-         else {return Err(Errors::KeyOutOfBounds)}
+        if let Ordering::Equal | Ordering::Less = key_bounds(vec,key) {
+            let value = vec.remove(key); //V
+            map.remove(&value);
+            Ok(value)
+        } else {return Err(Errors::KeyOutOfBounds)}
     }
 
     //Refrence
@@ -291,6 +291,17 @@ pub trait Insertable: Clone + Hash + Eq {}
                     refvec: Vec::new()
                 }
             }
+
+    pub     fn with_capacity(size: usize) -> Self {
+                Self {
+                    vector: Vec::with_capacity(size),
+                    map: HashMap::with_capacity(size),
+                    #[cfg(feature = "FastRemove")]
+                    refvec: Vec::with_capacity(size)
+                }
+            } 
+
+    pub     fn len(&self)-> usize {self.vector.len()}
 
     //GETS
 

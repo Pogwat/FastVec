@@ -22,6 +22,7 @@ fn main() -> Result<(),Errors>{
     println!("one is: {}", fv[1]); //one is: 6767
     println!("elements: {}", fv); //elements: ["hi", "6767"]
     println!("full: {:?}", fv); //full: FastVec { vector: ["hi", "6767"], map: {"6767": 1, "hi": 0} }
+    println!("len is {}", fv.len());
     Ok(())
 }
 
