@@ -1,2 +1,2 @@
-mod shared;
-#[cfg(feature = "Sort")] mod sort;
+pub mod shared;
+#[cfg(feature = "Sort")] pub mod sort;

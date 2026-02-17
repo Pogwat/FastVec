@@ -1,6 +1,5 @@
-mod shared;
-use shared::FastVec;
-use shared::Errors;
+use testing::shared::FastVec;
+use testing::shared::Errors;
 
 
 fn main() -> Result<(),Errors>{
