@@ -24,9 +24,9 @@ use core::ops::Index;
     #[cfg(feature = "Sort")]
     #[allow(dead_code)]
     pub struct SortedFastVec<V,B> {
-        pub   vector: Vec<V> ,//key, value
-        pub   map: HashMap<V, usize>, //value, key
+        pub   fastvec:  FastVec<V>,
         pub   btreemap: BTreeMap<B,Vec<usize>>, //field_to_sort_by, key
+        pub   ref_vec: Vec<(B,usize)> // same element index as fastvec contains btree key and vec value 
     }
 
 //ARGS AND TRAIT BOUNDS
@@ -34,7 +34,7 @@ use core::ops::Index;
 pub trait Insertable: Clone + Hash + Eq {}
 
     impl<T: Clone + Hash + Eq> Insertable for T {}
-
+    #[allow(dead_code)]
     #[derive(Default)] //Reusable with optionals
     struct Args<V: Insertable, #[cfg(feature = "Sort")]B:Ord>{
         map: Option<HashMap<V, usize> > ,
@@ -128,7 +128,7 @@ pub trait Insertable: Clone + Hash + Eq {}
     fn get_sort_keys<'a,V:Insertable,B:Ord>(btree:&'a BTreeMap<B,Vec<usize> >, sortval: &B) -> Option<&'a Vec<usize>>{ 
         btree.get(sortval)
     }
-
+    #[allow(dead_code)]
     fn keys_to_values<V:Insertable>(keys:&Vec<usize>, vec:&Vec<V>) -> Option<Vec<V>>{
         let vals: Vec<V> = keys.iter()
         .filter_map(|&k| vec.get(k))
@@ -177,9 +177,10 @@ pub trait Insertable: Clone + Hash + Eq {}
         index
     }
     
-    fn fastvec_push<V: Insertable>( vec: &mut Vec<V>, map: &mut HashMap<V, usize>, value: V) -> Option<usize>{ //SHould return None if no duplicate entrys, else Some(usize) 
+    fn fastvec_push<V: Insertable>( vec: &mut Vec<V>, map: &mut HashMap<V, usize>, value: V) -> usize{ 
         let index = push_vec(vec, value.clone());
-        map.insert(value, index) //returns lastkey Option<usize>
+        map.insert(value, index); //returns lastkey Option<usize> //SHould return None if no duplicate entrys, else Some(usize) 
+        index
     }
     
     #[cfg(feature = "Sort")]
@@ -196,6 +197,28 @@ pub trait Insertable: Clone + Hash + Eq {}
         map.insert(value,key);
         Ok(())
         } else {return Err(Errors::KeyOutOfBounds)}
+    }
+    #[cfg(feature = "Sort")] 
+    fn fastvec_sort_push_at_val<V: Insertable, B:Ord>( fastvec: &mut FastVec<V>, btreemap: &mut BTreeMap<B,Vec<usize>>, sortval:B, val:V) -> (usize,usize){
+        let last_index = fastvec.push(val); //returns last usize
+        let entry_vec = btreemap.entry(sortval).or_insert_with(Vec::new); //insert val at sortval
+        let entry_vec_index= entry_vec.len();
+        entry_vec.push(last_index);
+        (last_index, entry_vec_index)
+    }
+    #[cfg(feature = "Sort")] 
+    fn sort_fastvec_push<V: Insertable, B:Ord + Clone>( fastvec: &mut FastVec<V>, btreemap: &mut BTreeMap<B,Vec<usize>>, ref_vec:&mut Vec<(B,usize)>,sortval:B, val:V) -> (usize,usize){
+        let  (last_index, entry_vec_index) = fastvec_sort_push_at_val( fastvec, btreemap,sortval.clone(),val);
+        ref_vec[last_index]= (sortval, entry_vec_index); //same as push
+        (last_index, entry_vec_index)
+    }
+    #[cfg(feature = "Sort")] 
+    fn sort_fastvec_remove<V: Insertable, B:Ord + Clone>( fastvec: &mut FastVec<V>, btreemap: &mut BTreeMap<B,Vec<usize>>, ref_vec:&mut Vec<(B,usize)>, key:usize) -> (usize,usize){
+        fastvec.remove_by_key(key);
+        let (sortval, entry_vec_index) = ref_vec.remove(key);
+        let mut_entry = btreemap.get_mut(&sortval)?;
+        mut_entry.remove(entry_vec_index); //other vectors will have indexs changed
+
     }
 
     //REMOVES
@@ -279,7 +302,7 @@ pub trait Insertable: Clone + Hash + Eq {}
     //FASTVEC IMPLS
 
     #[allow(dead_code)] //Backend Shared helpers for map vector
-    impl<V:Hash + Eq + Clone + Ord> FastVec<V> {
+    impl<V:Hash + Eq + Clone> FastVec<V> {
 
     //CONSTRUCTORS
     
@@ -300,12 +323,14 @@ pub trait Insertable: Clone + Hash + Eq {}
                     refvec: Vec::with_capacity(size)
                 }
             } 
+    
     //Wrappers
+
     pub const fn len(&self)-> usize {self.vector.len()}
     pub const fn capacity(&self) -> usize {self.vector.capacity()}
     pub fn reserve(&mut self, additional: usize){
-        &mut self.vector.reserve(additional);
-        &mut self.map.reserve(additional);}
+        self.vector.reserve(additional);
+        self.map.reserve(additional);}
 
 
     //GETS
@@ -328,7 +353,7 @@ pub trait Insertable: Clone + Hash + Eq {}
                 fastvec_mod_by_value(&mut self.vector,&mut self.map,value,newval) 
             }
 
-    pub     fn push(&mut self, value:V) -> Option<usize>{
+    pub     fn push(&mut self, value:V) -> usize{
                 fastvec_push(&mut self.vector, &mut self.map, value)
             }
 
@@ -358,8 +383,80 @@ pub trait Insertable: Clone + Hash + Eq {}
 
     //SORTED FASTVEC IMPLS
 
+
+    
+
     #[allow(dead_code)]
     #[cfg(feature = "Sort")] 
     impl<V:Hash + Eq + Clone + Ord, B:Ord> SortedFastVec<V,B> {
+    //copy pasted from above
+        //CONSTRUCTORS
+    
+    pub     fn new() -> Self {
+                Self {
+                    fastvec: FastVec::new(),
+                    btreemap: BTreeMap::new(),
+                    ref_vec: Vec::new()
+                }
+            }
+
+    // pub     fn with_capacity(size: usize) -> Self {
+    //             Self {
+    //                 FastVec::with_capacity(size),
+    //             }
+    //         } 
+    
+    //Wrappers
+
+    pub const fn len(&self)-> usize {self.fastvec.len()}
+    pub const fn capacity(&self) -> usize {self.fastvec.capacity()}
+    pub fn reserve(&mut self, additional: usize){self.fastvec.reserve(additional);}
+
+    //GETS
+
+    pub     fn get_by_key(&self, key:usize) -> Result<V,Errors> {
+                self.fastvec.get_by_key( key)
+            }
+
+    pub     fn get_by_value(&self, value:&V) -> Result<usize, Errors> {
+                self.fastvec.get_by_value(value)       
+            }
+
+    //INSERTS
+
+    pub     fn mod_by_key(&mut self, key:usize, newvalue:V) -> Result<V,Errors> {
+                self.fastvec.mod_by_key(key, newvalue) 
+            }
+
+    pub     fn mod_by_value(&mut self,value:&V,newval:V) -> Result<V,Errors> {
+                self.fastvec.mod_by_value(value,newval) 
+            }
+
+    pub     fn push(&mut self, value:V) -> usize{
+                self.fastvec.push(value)
+            }
+
+    pub     fn insert(& mut self,key:usize, value:V) -> Result<(),Errors>  {
+                self.fastvec.insert(key, value) 
+            }
+
+    //REMOVES
+
+    pub     fn remove_by_key(&mut self, key:usize) -> Result<V,Errors> {
+                self.fastvec.remove_by_key(key)
+            }
+
+    pub     fn remove_by_value(&mut self, value:&V) -> Result<usize, Errors> {
+                self.fastvec.remove_by_value(value)
+            }
+
+    pub     fn swap_remove_by_key(&mut self, key:usize) -> Result<V,Errors> { //removed_value
+                self.fastvec.swap_remove_by_key( key) 
+            }
+
+    pub     fn swap_remove_by_value(&mut self, value:&V) -> Result<usize,Errors> {  //removed_key
+                self.fastvec.swap_remove_by_value( value)
+            }
+
 
     }
