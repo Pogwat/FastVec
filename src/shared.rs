@@ -1,7 +1,7 @@
 use hashbrown::HashMap;
 use core::hash::Hash;
 use core::fmt;
-use core::cmp::Ordering;
+//use core::cmp::Ordering;
 use core::mem;
 use core::ops::Index;
 use core::ptr;
@@ -205,10 +205,10 @@ pub trait Insertable: Clone + Hash + Eq {}
         }
 
         fn mod_to(&mut self, key:usize, value:V) -> Result<V,Errors>{
-        let old_value = mem::replace (self.mod_to_key(key)?, value.clone()); /*Bounds check is done here, also on mod_to_value*/
-        self.remove_by_value(&old_value);
-        self.push_a_value_to_key(value,key);
-        Ok(old_value)
+            let old_value = mem::replace (self.mod_to_key(key)?, value.clone()); /*Bounds check is done here, also on mod_to_value*/
+            self.remove_by_value(&old_value)?;
+            self.push_a_value_to_key(value,key);
+            Ok(old_value)
         }      
 
         fn bounds_check(&self, key:usize) -> Result<usize,Errors>{

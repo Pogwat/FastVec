@@ -5,15 +5,15 @@ use testing::shared::ValueMapKeyVec;
 fn main() -> Result<(),Errors>{
     let mut fv: FastVec<String> = FastVec::new();   
     //fv.insert(10,"hi".to_string());
-    println!("len:{}", fv.len_of_vec()); //len:0
-    fv.push_by_value("hi".to_string());
-    println!("hi is at: {}", fv.get_by_value(&"hi".to_string())?); //hi is at: 0
-    println!("0 is :{}", fv.get_by_key(0)?); //0 is :hi
+     println!("len:{}", fv.len_of_vec()); //len:0
+     fv.push_by_value("hi".to_string());
+     println!("hi is at: {}", fv.get_by_value(&"hi".to_string())?); //hi is at: 0
+     println!("0 is :{}", fv.get_by_key(0)?); //0 is :hi
 
-    let (old_v,_) = fv.mod_to(0, "3".to_string())?;
-    println!("{}",old_v);
-    fv.push_by_value("hii".to_string());
-    println!("hii is at: {}", fv.get_by_value(&"hii".to_string())?); //hii is at: 1
+    // let (old_v,_) = fv.mod_to(0, "3".to_string())?;
+    // println!("{}",old_v);
+    // fv.push_by_value("hii".to_string());
+    // println!("hii is at: {}", fv.get_by_value(&"hii".to_string())?); //hii is at: 1
     
     // for item in fv.iter() {
     //     println!("{}",item); //hi 6767
