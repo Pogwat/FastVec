@@ -98,6 +98,32 @@ pub trait Insertable: Clone + Hash + Eq {}
         }
     }
 
+    //THE BORROW CHECKER IS SO DUMB IT WONT ALLOW NON-CONCURRENT! MUTABLE BORROWS TO SELF
+    //SO NOW I NEED A MACRO BEACUSE ITS SO DUMB :(
+        //     fn swap_two_muts<T>(mut1:& mut T, mut2:& mut T) -> (){
+        //     let key1_ptr = ptr::from_mut(mut1);
+        //     let key2_ptr = ptr::from_mut(mut2);
+        //     unsafe {
+        //     ptr::swap(key1_ptr, key2_ptr);
+        //     };
+        // }
+
+        //     fn swap_refs<T>(a: &mut T, b: &mut T) {
+        //          unsafe {
+        //              std::ptr::swap(ptr::from_mut(a), ptr::from_mut(b));
+        //          }
+        //      }
+
+    macro_rules! swap_refs {
+    ($a:expr, $b:expr) => {{
+        let ptr1 = ptr::from_mut($a);
+        let ptr2 = ptr::from_mut($b);
+        unsafe { ptr::swap(ptr1, ptr2) };
+    }};
+    }
+
+
+
     pub trait ValueMapKeyVec<V:Insertable>{
         /*      NOTES 
         Keys are stored in a Map
@@ -156,12 +182,9 @@ pub trait Insertable: Clone + Hash + Eq {}
             Ok(())
         }
 
-        fn swap_two_muts<T>(mut1:& mut T, mut2:& mut T) -> (){
-            let key1_ptr = ptr::from_mut(mut1);
-            let key2_ptr = ptr::from_mut(mut2);
-            unsafe {
-            ptr::swap(key1_ptr, key2_ptr);
-            }
+        fn swap_2_k_selfs(&mut self, key1:usize, key2:usize) -> Result<(),Errors> {
+            swap_refs!(self.mod_to_key(key1)?, self.mod_to_key(key2)?); //LOL, YOU NEED A MACRO. GRRR! :((((((
+            Ok(())
         }
 
 
