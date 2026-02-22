@@ -1,5 +1,5 @@
 use crate::shared::*;
-use std::hash::Hash;
+use core::hash::Hash;
 use std::collections::BTreeMap;
 
     #[allow(dead_code)]
@@ -56,6 +56,12 @@ use std::collections::BTreeMap;
     //     mut_entry.remove(entry_vec_index); //other vectors will have indexs changed
 
     // }
+
+    sort_fastvec_by_key<V: Insertable, B:Ord + Clone>( fastvec: &mut FastVec<V>, btreemap: &mut BTreeMap<B,Vec<usize>>, ref_vec:&mut Vec<(B,usize)>, key:usize) -> (usize,usize){
+
+    }
+
+        //SORTED FASTVEC IMPLS
 
     #[allow(dead_code)]
     impl<V:Hash + Eq + Clone + Ord, B:Ord> SortedFastVec<V,B> {
@@ -120,7 +126,7 @@ use std::collections::BTreeMap;
                 self.fastvec.remove_by_value(value)
             }
 
-    pub     fn swap_remove_by_key(&mut self, key:usize) -> Result<V,Errors> { //removed_value
+    pub     fn swap_remove_by_key(&mut self, key:usize) -> Result<(V,Option<V>),Errors> { //removed_value
                 self.fastvec.swap_remove_by_key( key) 
             }
 

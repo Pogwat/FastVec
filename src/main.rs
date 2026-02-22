@@ -1,7 +1,6 @@
 use testing::shared::FastVec;
 use testing::shared::Errors;
 
-
 fn main() -> Result<(),Errors>{
     let mut fv: FastVec<String> = FastVec::new();   
     //fv.insert(10,"hi".to_string());
