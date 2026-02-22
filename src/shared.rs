@@ -114,13 +114,13 @@ pub trait Insertable: Clone + Hash + Eq {}
 
         fn remove_by_value(&mut self, value:V) -> Result<usize,Errors>;
 
-        // fn mod_to_key(&mut self, key:usize) -> Result<&mut V,Errors>;
+        fn mod_to_key(&mut self, key:usize) -> Result<&mut V,Errors>; //My solution :)
 
-        // fn mod_to_value(&mut self, value:V) -> Result<&mut usize,Errors>;
+        fn mod_to_value(&mut self, value:&V) -> Result<&mut usize,Errors>;
 
-        fn mod_to_keys(&mut self) -> &mut Vec<V>; //Cant have mutable refrence to self multiple times so one big refrence it is
+        // fn mod_to_keys(&mut self) -> &mut Vec<V>; //Cant have mutable refrence to self multiple times so one big refrence it is
 
-        fn mod_to_values(&mut self) -> &mut HashMap<V,usize>;
+         //fn mod_to_values(&mut self) -> &mut HashMap<V,usize>;
 
         fn push_a_value_to_key(&mut self, value:V, key:usize) -> ();
 
@@ -133,6 +133,40 @@ pub trait Insertable: Clone + Hash + Eq {}
 
 
         //Using previous impl methods
+
+        fn swap_muts(&mut self, key1:usize, key2:usize) -> Result<(),Errors>{
+            let key1_mod = self.mod_to_key(key1)?;
+            let key1_ptr = ptr::from_mut(key1_mod);
+            let key2_mod = self.mod_to_key(key2)?;
+            let key2_ptr = ptr::from_mut(key2_mod);
+            unsafe {
+            ptr::swap(key1_ptr, key2_ptr);
+            }
+            Ok(())
+        }
+
+        fn swap_values(&mut self, value1:&V, value2:&V) -> Result<(),Errors>{
+            let value1_mod = self.mod_to_value(value1)?;
+            let value1_ptr = ptr::from_mut(value1_mod);
+            let value2_mod = self.mod_to_value(value2)?;
+            let value2_ptr  = ptr::from_mut(value2_mod);
+            unsafe {
+            ptr::swap(value1_ptr, value2_ptr);
+            }
+            Ok(())
+        }
+
+        fn swap_two_muts<T>(mut1:& mut T, mut2:& mut T) -> (){
+            let key1_ptr = ptr::from_mut(mut1);
+            let key2_ptr = ptr::from_mut(mut2);
+            unsafe {
+            ptr::swap(key1_ptr, key2_ptr);
+            }
+        }
+
+
+
+
 
         // fn get_key_from_value(&self, value:&V) -> Result<V,Errors> {
         //     let key = self.get_by_value(value)?;
@@ -154,27 +188,27 @@ pub trait Insertable: Clone + Hash + Eq {}
         //     Ok(())
         // }
 
-        fn swap_keys(&mut self, key1:usize, key2:usize) -> Result<(),Errors> {
-            let key_mod = self.mod_to_keys();
-            let key1_ptr = &raw mut key_mod[key1];
-            let key2_ptr = &raw mut key_mod[key2];
+        // fn swap_keys(&mut self, key1:usize, key2:usize) -> Result<(),Errors> {
+        //     let key_mod = self.mod_to_keys();
+        //     let key1_ptr = &raw mut key_mod[key1];
+        //     let key2_ptr = &raw mut key_mod[key2];
 
-            unsafe {
-                ptr::swap(key1_ptr, key2_ptr);
-            }
-            Ok(())
-        }
+        //     unsafe {
+        //         ptr::swap(key1_ptr, key2_ptr);
+        //     }
+        //     Ok(())
+        // }
 
-        fn swap_values(&mut self, value1:V, value2:V) -> Result<(),Errors> {
-            let key_mod = self.mod_to_values();
-            let value1_ptr = &raw mut *key_mod.get_mut(&value1).unwrap();   
-            let value2_ptr = &raw mut *key_mod.get_mut(&value2).unwrap();    
+        // fn swap_values(&mut self, value1:V, value2:V) -> Result<(),Errors> {
+        //     let key_mod = self.mod_to_values();
+        //     let value1_ptr = &raw mut *key_mod.get_mut(&value1).unwrap();   
+        //     let value2_ptr = &raw mut *key_mod.get_mut(&value2).unwrap();    
 
-            unsafe {
-                ptr::swap(value1_ptr, value2_ptr);
-            }
-            Ok(())
-        }
+        //     unsafe {
+        //         ptr::swap(value1_ptr, value2_ptr);
+        //     }
+        //     Ok(())
+        // }
 
         fn last_index(&self) -> usize { //get last elemnt of vector
             self.len_of_vec()-1
@@ -183,7 +217,7 @@ pub trait Insertable: Clone + Hash + Eq {}
         fn key_swap_remove(&mut self, key1:usize ) -> Result<V,Errors> { //swaps key with last and pops for a vector
             let value = self.get_by_key(key1)?;
             let last_index = self.last_index();
-            self.swap_keys(key1,last_index)?;
+            self.swap_muts(key1,last_index)?;
             self.pop_from_keys(); //should probably require a pop impl and use .pop() instead of .remove()
             Ok(value)
         }
@@ -210,15 +244,15 @@ pub trait Insertable: Clone + Hash + Eq {}
             last_index
         }
 
-        fn mod_to(&mut self, key:usize, value:V) -> Result<(V,Option<usize>),Errors>{
-            self.bounds_check(key)?; 
-            let keys = self.mod_to_keys();
-            let old_value = mem::replace(&mut keys[key], value.clone());
-            let values = self.mod_to_values(); 
-            values.remove(&old_value);     
-            let old_key_of_value: Option<usize> = values.insert(value,key);
-            Ok((old_value,old_key_of_value))
-        }
+        // fn mod_to(&mut self, key:usize, value:V) -> Result<(V,Option<usize>),Errors>{
+        //     self.bounds_check(key)?; 
+        //     let keys = self.mod_to_keys();
+        //     let old_value = mem::replace(&mut keys[key], value.clone());
+        //     let values = self.mod_to_values(); 
+        //     values.remove(&old_value);     
+        //     let old_key_of_value: Option<usize> = values.insert(value,key);
+        //     Ok((old_value,old_key_of_value))
+        // }
 
         fn bounds_check(&self, key:usize) -> Result<usize,Errors>{
             let last_index = self.last_index();
@@ -247,13 +281,26 @@ impl <V:Insertable>ValueMapKeyVec<V> for FastVec<V> {
         Ok(value)
     }
 
-    fn mod_to_keys(&mut self) -> &mut Vec<V> {
-        &mut self.vector 
+    // fn mod_to_keys(&mut self) -> &mut Vec<V> {
+    //     &mut self.vector 
+    // }
+
+    fn mod_to_key(&mut self, key:usize) -> Result<&mut V,Errors> {
+        self.bounds_check(key)?;
+        let refrence = &mut self.vector[key];
+        Ok(refrence)
+    }
+    
+    fn mod_to_value(&mut self, value:&V) -> Result<&mut usize,Errors> {
+        match self.map.get_mut(value) {
+            Some(index) => Ok(index),
+            None => Err(Errors::ValueOutOfBounds),
+        }
     }
 
-    fn mod_to_values(&mut self) -> &mut HashMap<V,usize> {
-        &mut self.map
-    }
+    // fn mod_to_values(&mut self) -> &mut HashMap<V,usize> {
+    //     &mut self.map
+    // }
 
     fn push_a_value_to_key(&mut self, value:V, key:usize) -> (){
         self.map.insert(value,key);
@@ -275,26 +322,26 @@ impl <V:Insertable>ValueMapKeyVec<V> for FastVec<V> {
 
 
 
-    impl<V:Hash + Eq + Clone> FastVec<V> {
+impl<V:Hash + Eq + Clone> FastVec<V> {
 
-    //CONSTRUCTORS
-    
-    pub     fn new() -> Self {
-                Self {
-                    vector: Vec::new(),
-                    map: HashMap::new(),
-                    #[cfg(feature = "FastRemove")]
-                    refvec: Vec::new()
-                }
+//CONSTRUCTORS
+
+pub     fn new() -> Self {
+            Self {
+                vector: Vec::new(),
+                map: HashMap::new(),
+                #[cfg(feature = "FastRemove")]
+                refvec: Vec::new()
             }
-
-    pub     fn with_capacity(size: usize) -> Self {
-                Self {
-                    vector: Vec::with_capacity(size),
-                    map: HashMap::with_capacity(size),
-                    #[cfg(feature = "FastRemove")]
-                    refvec: Vec::with_capacity(size)
-                }
-            } 
-
         }
+
+pub     fn with_capacity(size: usize) -> Self {
+            Self {
+                vector: Vec::with_capacity(size),
+                map: HashMap::with_capacity(size),
+                #[cfg(feature = "FastRemove")]
+                refvec: Vec::with_capacity(size)
+            }
+        } 
+
+}
