@@ -98,7 +98,7 @@ pub trait Insertable: Clone + Hash + Eq {}
         }
     }
 
-    trait ValueMapKeyVec<V:Insertable>{
+    pub trait ValueMapKeyVec<V:Insertable>{
         /*      NOTES 
         Keys are stored in a Map
         Values are stored in A Vec
@@ -108,7 +108,7 @@ pub trait Insertable: Clone + Hash + Eq {}
 
         fn get_by_key(&self, key:usize) -> Result<V,Errors>;
 
-        fn get_by_value(&self, value:V) -> Result<usize,Errors>;
+        fn get_by_value(&self, value:&V) -> Result<usize,Errors>;
 
         //remove_a_key(&mut self, key:usize) -> Result<V,Errors>
 
@@ -118,9 +118,9 @@ pub trait Insertable: Clone + Hash + Eq {}
 
         // fn mod_to_value(&mut self, value:V) -> Result<&mut usize,Errors>;
 
-        fn mod_to_keys(&mut self) -> Result<&mut Vec<V>,Errors>; //Cant have mutable refrence to self multiple times so one big refrence it is
+        fn mod_to_keys(&mut self) -> &mut Vec<V>; //Cant have mutable refrence to self multiple times so one big refrence it is
 
-        fn mod_to_values(&mut self) -> Result<&mut HashMap<V,usize>,Errors>;
+        fn mod_to_values(&mut self) -> &mut HashMap<V,usize>;
 
         fn push_a_value_to_key(&mut self, value:V, key:usize) -> ();
 
@@ -134,11 +134,11 @@ pub trait Insertable: Clone + Hash + Eq {}
 
         //Using previous impl methods
 
-        fn get_from_value(&self, value:V) -> Result<V,Errors> {
-            let key = self.get_by_value(value)?;
-            let vvalue = self.get_by_key(key)?;
-            Ok(vvalue)  
-        }
+        // fn get_key_from_value(&self, value:&V) -> Result<V,Errors> {
+        //     let key = self.get_by_value(value)?;
+        //     let vvalue = self.get_by_key(key)?;
+        //     Ok(vvalue)  
+        // }
 
         // fn value_swap(&mut self, value1:V, value2:V) -> Result<(),Errors> { //Swaps values stored at hashmap keys
         //     let value1_mod = self.mod_to_value(value1)?;
@@ -155,7 +155,7 @@ pub trait Insertable: Clone + Hash + Eq {}
         // }
 
         fn swap_keys(&mut self, key1:usize, key2:usize) -> Result<(),Errors> {
-            let key_mod = self.mod_to_keys()?;
+            let key_mod = self.mod_to_keys();
             let key1_ptr = &raw mut key_mod[key1];
             let key2_ptr = &raw mut key_mod[key2];
 
@@ -165,13 +165,13 @@ pub trait Insertable: Clone + Hash + Eq {}
             Ok(())
         }
 
-                fn swap_values(&mut self, key1:V, key2:V) -> Result<(),Errors> {
-            let key_mod = self.mod_to_values()?;
-            let key1_ptr = &raw mut *key_mod.get_mut(&key1).unwrap();   
-            let key2_ptr = &raw mut *key_mod.get_mut(&key2).unwrap();    
+        fn swap_values(&mut self, value1:V, value2:V) -> Result<(),Errors> {
+            let key_mod = self.mod_to_values();
+            let value1_ptr = &raw mut *key_mod.get_mut(&value1).unwrap();   
+            let value2_ptr = &raw mut *key_mod.get_mut(&value2).unwrap();    
 
             unsafe {
-                ptr::swap(key1_ptr, key2_ptr);
+                ptr::swap(value1_ptr, value2_ptr);
             }
             Ok(())
         }
@@ -203,164 +203,78 @@ pub trait Insertable: Clone + Hash + Eq {}
 
         }
 
-        fn push_by_value(&mut self, value:V) -> () { 
+        fn push_by_value(&mut self, value:V) -> usize {    
+            self.push_a_value(value.clone());
             let last_index = self.last_index();
-            self.push_a_value_to_key(value.clone(), last_index);
-            self.push_a_value(value);
+            self.push_a_value_to_key(value, last_index);
+            last_index
         }
 
-
-
-
-    }
-
-//HELPER FUNCTIONS
-    
-    //CHECKS
-
-    fn key_bounds<T>(vec:&Vec<T>, key:usize) -> Ordering{ //probably dont need a fucntion for something this simple
-        let last_index = vec.len()-1;
-        key.cmp(&last_index)
-    }
-
-    //GETS
-
-    fn get_by_key<V:Insertable>(vec: &Vec<V>, key:usize) -> Result<V,Errors>{
-        Ok(vec.get(key).ok_or(Errors::KeyOutOfBounds)?.clone())
-    }
-
-    fn get_by_value<V:Insertable>(map: &HashMap<V,usize>, value:&V) -> Result<usize,Errors> {
-        Ok(map.get(value).ok_or(Errors::ValueOutOfBounds)?.clone())
-    }
-
-    //INSERTS
-
-    //modify key's value and returns old value, consumes newvalue
-    fn vec_mod_key<V:Insertable>(vec: &mut Vec<V>,key:usize, newvalue:V) -> Result<V,Errors>{ 
-        let last_index = vec.len()-1;
-        if key<=last_index {
-            let old_value = mem::replace(&mut vec[key], newvalue);
-            Ok(old_value)
-        }else {return Err(Errors::KeyOutOfBounds)}
-
-    }
-    
-    //change value, return old 
-    fn fastvec_mod_by_value<V:Insertable>( vec: &mut Vec<V>,map: &mut HashMap<V,usize>,value:&V,newval:V) -> Result<V,Errors> {
-        let key = map.remove(value).ok_or(Errors::ValueOutOfBounds)?;
-        map.insert(newval.clone(),key);
-        vec_mod_key(vec,key,newval)
+        fn mod_to(&mut self, key:usize, value:V) -> Result<(V,Option<usize>),Errors>{
+            self.bounds_check(key)?; 
+            let keys = self.mod_to_keys();
+            let old_value = mem::replace(&mut keys[key], value.clone());
+            let values = self.mod_to_values(); 
+            values.remove(&old_value);     
+            let old_key_of_value: Option<usize> = values.insert(value,key);
+            Ok((old_value,old_key_of_value))
         }
 
-    //change value, return old
-    fn fastvec_mod_by_key<V:Insertable>( vec: &mut Vec<V>,map: &mut HashMap<V,usize>,key:usize,newval:V) -> Result<V,Errors> {
-        let old_value = vec_mod_key(vec,key,newval.clone())?;
-        map.remove(&old_value);
-        map.insert(newval,key);
-        Ok(old_value)
-    }
-        
-
-    fn push_vec<V:Insertable>(vec: &mut Vec<V>, value:V) -> usize { //push to a vec
-        let index = vec.len(); // = last-1. vec index starts at 0, but length starts at 1. so len-1 = index. len = next element index
-        vec.push(value);
-        index
-    }
-    
-    fn fastvec_push<V: Insertable>( vec: &mut Vec<V>, map: &mut HashMap<V, usize>, value: V) -> usize{ 
-        let index = push_vec(vec, value.clone());
-        map.insert(value, index); //returns lastkey Option<usize> //SHould return None if no duplicate entrys, else Some(usize) 
-        index
-    }
-    
-
-    fn fastvec_insert<V: Insertable>(vec: &mut Vec<V>, map: &mut HashMap<V, usize>, key: usize, value: V) -> Result<(),Errors> {
-        if key<=vec.len(){
-        vec.insert(key,value.clone());  
-        map.insert(value,key);
-        Ok(())
-        } else {return Err(Errors::KeyOutOfBounds)}
-    }
-
-
-    //REMOVES
-
-    fn  swap_remove_by_key_old_new<V:Insertable>(vec: & mut Vec<V>, key:usize) -> Result<(V,Option<V>),Errors>{ //(Old,New),Error
-            let last_index:usize = vec.len()-1;
-            match key.cmp(&last_index) {
-                Ordering::Less => {
-                    let old_value = vec.swap_remove(key);
-                    let new_value = vec.get(key).ok_or(Errors::KeyOutOfBounds)?.clone();
-                    return Ok((old_value, Some(new_value)))
-                }
-                Ordering::Equal => {
-                    let old_value = vec.pop().ok_or(Errors::KeyOutOfBounds)?; //Last
-                    return Ok((old_value,None))
-                }
-                Ordering::Greater => {
-                    return Err(Errors::KeyOutOfBounds)
-                }
+        fn bounds_check(&self, key:usize) -> Result<usize,Errors>{
+            let last_index = self.last_index();
+            if !key<=last_index {
+                return Err(Errors::KeyOutOfBounds)
             }
-    }
-
-    fn fastvec_swap_remove_key<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, key:usize) -> Result<(V,Option<V>),Errors> { //removed_value 
-        let (removed_value, new_value) = swap_remove_by_key_old_new(vec,key)?;
-        map.remove(&removed_value);
-        if let Some(value) = new_value.clone() { //A None value would occur if key=last index, this is valid and shouldnt return error, just remove from the map
-            map.insert(value, key);
+            Ok(last_index)
         }
-        // else {
-        //     return Err(Errors::ValueOutOfBounds)
-        // };
 
-        Ok((removed_value, new_value))
-    }
-
-    fn fastvec_absolute_remove_by_key<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, refvec:&mut Vec<Option<usize>>, key:usize) -> Result<(V,Option<V>),Errors>{
-        let (removed_value,new_value) = fastvec_swap_remove_key(vec,map,key)?;
-        let last_index= vec.len()-1;
-        refvec[last_index] = None;
-        if new_value.is_some() {
-        refvec[key] = Some(last_index);
-        }
-        Ok((removed_value,new_value))
 
     }
 
-    fn fastvec_swap_remove_value<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, value:&V) -> Result<usize,Errors>{ //removed_key
-        let key:usize = map.remove(value).ok_or(Errors::ValueOutOfBounds)?;
-        if let (_, Some(new_value)) = swap_remove_by_key_old_new(vec,key)? {  //A None value would occur if key=last index, this is valid and shouldnt return error, just remove from the map
-        map.insert(new_value, key);
-        }
-        // else {
-        //     return Err(Errors::KeyOutOfBounds)
-        // };
-        Ok(key)
+impl <V:Insertable>ValueMapKeyVec<V> for FastVec<V> {
+    fn get_by_key(&self, key:usize) -> Result<V,Errors> {
+        let element = self.vector.get(key).ok_or(Errors::KeyOutOfBounds)?.clone();
+        Ok(element)
     }
 
-    fn fastvec_remove_by_value<V: Insertable>( vec:&mut Vec<V>, map: &mut HashMap<V, usize>, value: &V) ->  Result<usize, Errors>{
-        let key = map.remove(value).ok_or(Errors::ValueOutOfBounds)?; //Option<V>
-        if let Ordering::Equal | Ordering::Less = key_bounds(vec,key) {
-        vec.remove(key); 
-        Ok(key)
-        } else {return Err(Errors::KeyOutOfBounds)}
-        
-    }    
-
-    fn fastvec_remove_by_key<V: Insertable>( vec:&mut Vec<V>, map: &mut HashMap<V, usize>, key: usize) -> Result<V,Errors> {
-        if let Ordering::Equal | Ordering::Less = key_bounds(vec,key) {
-            let value = vec.remove(key); //V
-            map.remove(&value);
-            Ok(value)
-        } else {return Err(Errors::KeyOutOfBounds)}
+    fn get_by_value(&self, value:&V) -> Result<usize,Errors> {
+        let element = self.map.get(value).ok_or(Errors::ValueOutOfBounds)?.clone();
+        Ok(element)
     }
 
+    fn remove_by_value(&mut self, value:V) -> Result<usize,Errors> {
+        let value = self.map.remove(&value).ok_or(Errors::ValueOutOfBounds)?;
+        Ok(value)
+    }
 
-//IMPLS
+    fn mod_to_keys(&mut self) -> &mut Vec<V> {
+        &mut self.vector 
+    }
 
-    //FASTVEC IMPLS
+    fn mod_to_values(&mut self) -> &mut HashMap<V,usize> {
+        &mut self.map
+    }
 
-    #[allow(dead_code)] //Backend Shared helpers for map vector
+    fn push_a_value_to_key(&mut self, value:V, key:usize) -> (){
+        self.map.insert(value,key);
+    }
+
+    fn push_a_value(&mut self, value:V) -> () {
+        self.vector.push(value);
+    }
+
+    fn pop_from_keys(&mut self) -> () {
+        self.vector.pop();
+    }
+
+    fn len_of_vec(&self) -> usize {
+        self.vector.len()
+    }
+}
+
+
+
+
     impl<V:Hash + Eq + Clone> FastVec<V> {
 
     //CONSTRUCTORS
@@ -382,60 +296,5 @@ pub trait Insertable: Clone + Hash + Eq {}
                     refvec: Vec::with_capacity(size)
                 }
             } 
-    
-    //Wrappers
 
-    pub const fn len(&self)-> usize {self.vector.len()}
-    pub const fn capacity(&self) -> usize {self.vector.capacity()}
-    pub fn reserve(&mut self, additional: usize){
-        self.vector.reserve(additional);
-        self.map.reserve(additional);}
-
-
-    //GETS
-
-    pub     fn get_by_key(&self, key:usize) -> Result<V,Errors> {
-                get_by_key(&self.vector, key)
-            }
-
-    pub     fn get_by_value(&self, value:&V) -> Result<usize, Errors> {
-                get_by_value(&self.map, value)       
-            }
-
-    //INSERTS
-
-    pub     fn mod_by_key(&mut self, key:usize, newvalue:V) -> Result<V,Errors> {
-                fastvec_mod_by_key(&mut self.vector,&mut self.map,key, newvalue) 
-            }
-
-    pub     fn mod_by_value(&mut self,value:&V,newval:V) -> Result<V,Errors> {
-                fastvec_mod_by_value(&mut self.vector,&mut self.map,value,newval) 
-            }
-
-    pub     fn push(&mut self, value:V) -> usize{
-                fastvec_push(&mut self.vector, &mut self.map, value)
-            }
-
-    pub     fn insert(& mut self,key:usize, value:V) -> Result<(),Errors>  {
-                fastvec_insert(&mut self.vector, &mut self.map, key, value) 
-            }
-
-    //REMOVES
-
-    pub     fn remove_by_key(&mut self, key:usize) -> Result<V,Errors> {
-                fastvec_remove_by_key(&mut self.vector, &mut self.map, key)
-            }
-
-    pub     fn remove_by_value(&mut self, value:&V) -> Result<usize, Errors> {
-                fastvec_remove_by_value(&mut self.vector, &mut self.map, value)
-            }
-
-    pub     fn swap_remove_by_key(&mut self, key:usize) -> Result<(V,Option<V>),Errors> { //removed_value
-                fastvec_swap_remove_key(& mut self.vector,  &mut self.map , key) 
-            }
-
-    pub     fn swap_remove_by_value(&mut self, value:&V) -> Result<usize,Errors> {  //removed_key
-                fastvec_swap_remove_value(& mut self.vector,  &mut self.map , value)
-            }
-
-    }
+        }
