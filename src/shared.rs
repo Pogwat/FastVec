@@ -4,6 +4,7 @@ use core::fmt;
 use core::cmp::Ordering;
 use core::mem;
 use core::ops::Index;
+use core::ptr;
 
 //Need derive for custom fields from a struct, So only sorrting by one value now
 //using cfg logic with diffrent types and impl is nightmare, No struct<V,B> for me
@@ -97,6 +98,122 @@ pub trait Insertable: Clone + Hash + Eq {}
         }
     }
 
+    trait ValueMapKeyVec<V:Insertable>{
+        /*      NOTES 
+        Keys are stored in a Map
+        Values are stored in A Vec
+        */
+        //HashMap<value,key>
+        //Vec<key,value>
+
+        fn get_by_key(&self, key:usize) -> Result<V,Errors>;
+
+        fn get_by_value(&self, value:V) -> Result<usize,Errors>;
+
+        //remove_a_key(&mut self, key:usize) -> Result<V,Errors>
+
+        fn remove_by_value(&mut self, value:V) -> Result<usize,Errors>;
+
+        // fn mod_to_key(&mut self, key:usize) -> Result<&mut V,Errors>;
+
+        // fn mod_to_value(&mut self, value:V) -> Result<&mut usize,Errors>;
+
+        fn mod_to_keys(&mut self) -> Result<&mut Vec<V>,Errors>; //Cant have mutable refrence to self multiple times so one big refrence it is
+
+        fn mod_to_values(&mut self) -> Result<&mut HashMap<V,usize>,Errors>;
+
+        fn push_a_value_to_key(&mut self, value:V, key:usize) -> ();
+
+        fn push_a_value(&mut self, value:V) -> ();
+
+        fn pop_from_keys(&mut self) -> ();
+
+        fn len_of_vec(&self) -> usize;
+
+
+
+        //Using previous impl methods
+
+        fn get_from_value(&self, value:V) -> Result<V,Errors> {
+            let key = self.get_by_value(value)?;
+            let vvalue = self.get_by_key(key)?;
+            Ok(vvalue)  
+        }
+
+        // fn value_swap(&mut self, value1:V, value2:V) -> Result<(),Errors> { //Swaps values stored at hashmap keys
+        //     let value1_mod = self.mod_to_value(value1)?;
+        //     let value2_mod = self.mod_to_value(value2)?;
+        //     mem::swap( value1_mod,  value2_mod); 
+        //     Ok(())
+        // }
+
+        // fn key_swap(&mut self, key1:usize, key2:usize ) -> Result<(),Errors> { //Swaps values stored at vector keys
+        //     let key1_mod = self.mod_to_key(key1)?;
+        //     let key2_mod = self.mod_to_key(key2)?;
+        //     mem::swap( key1_mod,  key2_mod);
+        //     Ok(())
+        // }
+
+        fn swap_keys(&mut self, key1:usize, key2:usize) -> Result<(),Errors> {
+            let key_mod = self.mod_to_keys()?;
+            let key1_ptr = &raw mut key_mod[key1];
+            let key2_ptr = &raw mut key_mod[key2];
+
+            unsafe {
+                ptr::swap(key1_ptr, key2_ptr);
+            }
+            Ok(())
+        }
+
+                fn swap_values(&mut self, key1:V, key2:V) -> Result<(),Errors> {
+            let key_mod = self.mod_to_values()?;
+            let key1_ptr = &raw mut *key_mod.get_mut(&key1).unwrap();   
+            let key2_ptr = &raw mut *key_mod.get_mut(&key2).unwrap();    
+
+            unsafe {
+                ptr::swap(key1_ptr, key2_ptr);
+            }
+            Ok(())
+        }
+
+        fn last_index(&self) -> usize { //get last elemnt of vector
+            self.len_of_vec()-1
+        }
+
+        fn key_swap_remove(&mut self, key1:usize ) -> Result<V,Errors> { //swaps key with last and pops for a vector
+            let value = self.get_by_key(key1)?;
+            let last_index = self.last_index();
+            self.swap_keys(key1,last_index)?;
+            self.pop_from_keys(); //should probably require a pop impl and use .pop() instead of .remove()
+            Ok(value)
+        }
+
+        //remove_by_key() //UNSAFE
+
+        fn swap_remove_from_value(&mut self, value:V) -> Result<V,Errors> { //remove from hashmap + swaprm on vec. by value
+            let key = self.remove_by_value(value)?;
+            let value = self.key_swap_remove(key)?;
+            Ok(value)
+        }
+
+        fn swap_remove_from_key(&mut self, key:usize) -> Result<V,Errors> { //swap-rm key from vec, use value at key to remove from hashmap
+            let value = self.key_swap_remove(key)?;
+            self.remove_by_value(value.clone())?;
+            Ok(value)
+
+        }
+
+        fn push_by_value(&mut self, value:V) -> () { 
+            let last_index = self.last_index();
+            self.push_a_value_to_key(value.clone(), last_index);
+            self.push_a_value(value);
+        }
+
+
+
+
+    }
+
 //HELPER FUNCTIONS
     
     //CHECKS
@@ -186,17 +303,28 @@ pub trait Insertable: Clone + Hash + Eq {}
             }
     }
 
-    fn fastvec_swap_remove_key<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, key:usize) -> Result<V,Errors> { //removed_value 
+    fn fastvec_swap_remove_key<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, key:usize) -> Result<(V,Option<V>),Errors> { //removed_value 
         let (removed_value, new_value) = swap_remove_by_key_old_new(vec,key)?;
         map.remove(&removed_value);
-        if let Some(value) = new_value { //A None value would occur if key=last index, this is valid and shouldnt return error, just remove from the map
+        if let Some(value) = new_value.clone() { //A None value would occur if key=last index, this is valid and shouldnt return error, just remove from the map
             map.insert(value, key);
         }
         // else {
         //     return Err(Errors::ValueOutOfBounds)
         // };
 
-        Ok(removed_value)
+        Ok((removed_value, new_value))
+    }
+
+    fn fastvec_absolute_remove_by_key<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, refvec:&mut Vec<Option<usize>>, key:usize) -> Result<(V,Option<V>),Errors>{
+        let (removed_value,new_value) = fastvec_swap_remove_key(vec,map,key)?;
+        let last_index= vec.len()-1;
+        refvec[last_index] = None;
+        if new_value.is_some() {
+        refvec[key] = Some(last_index);
+        }
+        Ok((removed_value,new_value))
+
     }
 
     fn fastvec_swap_remove_value<V:Insertable>( vec: &mut Vec<V>,  map: &mut HashMap<V, usize>, value:&V) -> Result<usize,Errors>{ //removed_key
@@ -226,20 +354,6 @@ pub trait Insertable: Clone + Hash + Eq {}
             Ok(value)
         } else {return Err(Errors::KeyOutOfBounds)}
     }
-
-    //Refrence
-    
-    //Remove
-    
-   // #[cfg(feature = "FastRemove")] 
-
-
-    //Get
-  //  #[cfg(feature = "FastRemove")] 
-
-
-    //INsert
-    //#[cfg(feature = "FastRemove")] 
 
 
 //IMPLS
@@ -316,7 +430,7 @@ pub trait Insertable: Clone + Hash + Eq {}
                 fastvec_remove_by_value(&mut self.vector, &mut self.map, value)
             }
 
-    pub     fn swap_remove_by_key(&mut self, key:usize) -> Result<V,Errors> { //removed_value
+    pub     fn swap_remove_by_key(&mut self, key:usize) -> Result<(V,Option<V>),Errors> { //removed_value
                 fastvec_swap_remove_key(& mut self.vector,  &mut self.map , key) 
             }
 
@@ -325,10 +439,3 @@ pub trait Insertable: Clone + Hash + Eq {}
             }
 
     }
-
-    //SORTED FASTVEC IMPLS
-
-
-    
-
-    
