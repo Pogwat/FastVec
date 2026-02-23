@@ -6,9 +6,6 @@ use core::mem;
 use core::ops::Index;
 use core::ptr;
 
-//Need derive for custom fields from a struct, So only sorrting by one value now
-//using cfg logic with diffrent types and impl is nightmare, No struct<V,B> for me
-
 //STRUCTS
 
     #[allow(dead_code)]
@@ -20,8 +17,6 @@ use core::ptr;
         refvec: Vec< Option<usize> > //8 bytes overhead per element
 
     }
-    //#[cfg(not(feature = "Sort"))] 
-
 
 //ARGS AND TRAIT BOUNDS
 
@@ -100,20 +95,13 @@ pub trait Insertable: Clone + Hash + Eq {}
 
     //THE BORROW CHECKER IS SO DUMB IT WONT ALLOW NON-CONCURRENT! MUTABLE BORROWS TO SELF
     //SO NOW I NEED A MACRO BEACUSE ITS SO DUMB :(
-        //     fn swap_two_muts<T>(mut1:& mut T, mut2:& mut T) -> (){
-        //     let key1_ptr = ptr::from_mut(mut1);
-        //     let key2_ptr = ptr::from_mut(mut2);
-        //     unsafe {
-        //     ptr::swap(key1_ptr, key2_ptr);
-        //     };
-        // }
-
+    //Funciton args are evaluted before body. so passing 2 mutable refrences to a struct  will fail, regardless of how they are used in the funciton
         //     fn swap_refs<T>(a: &mut T, b: &mut T) {
         //          unsafe {
         //              std::ptr::swap(ptr::from_mut(a), ptr::from_mut(b));
         //          }
         //      }
-
+    #[macro_export]
     macro_rules! swap_refs {
     ($a:expr, $b:expr) => {{
         let ptr1 = ptr::from_mut($a);
@@ -163,12 +151,6 @@ pub trait Insertable: Clone + Hash + Eq {}
             swap_refs!(self.mod_to_key(key1)?, self.mod_to_key(key2)?); //LOL, YOU NEED A MACRO. GRRR! :((((((
             Ok(())
         }
-
-        // fn get_key_from_value(&self, value:&V) -> Result<V,Errors> {
-        //     let key = self.get_by_value(value)?;
-        //     let vvalue = self.get_by_key(key)?;
-        //     Ok(vvalue)  
-        // }
 
         fn last_index(&self) -> usize { //get last elemnt of vector
             self.len_of_vec()-1
