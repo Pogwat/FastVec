@@ -251,24 +251,32 @@ impl <V:Insertable>ValueMapKeyVec<V> for FastVec<V> {
 
 impl<V:Hash + Eq + Clone> FastVec<V> {
 
-//CONSTRUCTORS
+        //CONSTRUCTORS
 
-pub     fn new() -> Self {
-            Self {
-                vector: Vec::new(),
-                map: HashMap::new(),
-                #[cfg(feature = "FastRemove")]
-                refvec: Vec::new()
+    pub     fn new() -> Self {
+                Self {
+                    vector: Vec::new(),
+                    map: HashMap::new(),
+                    #[cfg(feature = "FastRemove")]
+                    refvec: Vec::new()
+                }
             }
-        }
 
-pub     fn with_capacity(size: usize) -> Self {
-            Self {
-                vector: Vec::with_capacity(size),
-                map: HashMap::with_capacity(size),
-                #[cfg(feature = "FastRemove")]
-                refvec: Vec::with_capacity(size)
-            }
-        } 
+    pub     fn with_capacity(size: usize) -> Self {
+                Self {
+                    vector: Vec::with_capacity(size),
+                    map: HashMap::with_capacity(size),
+                    #[cfg(feature = "FastRemove")]
+                    refvec: Vec::with_capacity(size)
+                }
+            } 
+
+        //Wrappers
+
+    pub const fn len(&self)-> usize {self.vector.len()}
+    pub const fn capacity(&self) -> usize {self.vector.capacity()}
+    pub fn reserve(&mut self, additional: usize){
+        self.vector.reserve(additional);
+        self.map.reserve(additional);}
 
 }
