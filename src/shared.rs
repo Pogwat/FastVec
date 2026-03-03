@@ -14,7 +14,9 @@ use core::ptr;
         pub   vector: Vec<V> ,//key, value
         pub   map: HashMap<V, usize>, //value, key
         #[cfg(feature = "FastRemove")]
-        refvec: Vec< Option<usize> > //8 bytes overhead per element
+        reals_fake: Vec<usize> 
+        #[cfg(feature = "FastRemove")]
+        fakes: Vec<Option<usize>> //8 bytes overhead per element
 
     }
 
@@ -28,7 +30,7 @@ pub trait Insertable: Clone + Hash + Eq {}
     struct Args<V: Insertable>{
         map: Option<HashMap<V, usize> > ,
         vector: Option<Vec<V> > ,
-        #[cfg(feature = "FastRemove")] refvec: Option<Vec<Option<usize>>>, 
+    // #[cfg(feature = "FastRemove")] refvec: Option<Vec<Option<usize>>>, 
         key: Option<usize>,
         value: Option<V>,
     }
@@ -258,7 +260,9 @@ impl<V:Hash + Eq + Clone> FastVec<V> {
                     vector: Vec::new(),
                     map: HashMap::new(),
                     #[cfg(feature = "FastRemove")]
-                    refvec: Vec::new()
+                    reals_fake: Vec::new() ,
+                    #[cfg(feature = "FastRemove")]
+                    fakes: Vec::new()  
                 }
             }
 
@@ -267,7 +271,9 @@ impl<V:Hash + Eq + Clone> FastVec<V> {
                     vector: Vec::with_capacity(size),
                     map: HashMap::with_capacity(size),
                     #[cfg(feature = "FastRemove")]
-                    refvec: Vec::with_capacity(size)
+                    reals_fake: Vec::with_capacity(size),
+                    #[cfg(feature = "FastRemove")]
+                    fakes: Vec::with_capacity(size)
                 }
             } 
 
