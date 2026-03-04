@@ -14,9 +14,9 @@ use core::ptr;
         pub   vector: Vec<V> ,//key, value
         pub   map: HashMap<V, usize>, //value, key
         #[cfg(feature = "FastRemove")]
-        reals_fake: Vec<usize> 
+        pub reals_fake: Vec<usize> ,
         #[cfg(feature = "FastRemove")]
-        fakes: Vec<Option<usize>> //8 bytes overhead per element
+        pub fakes: Vec<Option<usize>>, //8 bytes overhead per element
 
     }
 
