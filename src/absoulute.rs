@@ -6,10 +6,10 @@ use core::fmt;
 use core::ptr;
 //use core::mem;
 
-//  struct KeyVec<V> { 
-//     pub fake_key_of_corosponding_real: Vec<usize>, 
-//     pub fake_keys: Vec<Opiton<usize>>
-//  }
+pub struct KeyVec { 
+     pub reals_fake: Vec<usize>, 
+     pub fakes: Vec<Option<usize>>
+  }
 
 //ERRORS
     #[derive(Debug)]
@@ -122,7 +122,7 @@ pub trait AbsoluteKeys{
 
 }
 
-impl <V:Insertable> AbsoluteKeys for FastVec<V> {
+impl  AbsoluteKeys for KeyVec {
 
     //FAKES
         fn get_fake(&self, key:usize) -> Result<Option<usize>,Errors> {
