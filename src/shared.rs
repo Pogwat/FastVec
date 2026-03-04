@@ -5,6 +5,7 @@ use core::fmt;
 use core::mem;
 use core::ops::Index;
 use core::ptr;
+use crate::absoulute::KeyVec;
 
 //STRUCTS
 
@@ -14,10 +15,7 @@ use core::ptr;
         pub   vector: Vec<V> ,//key, value
         pub   map: HashMap<V, usize>, //value, key
         #[cfg(feature = "FastRemove")]
-        pub reals_fake: Vec<usize> ,
-        #[cfg(feature = "FastRemove")]
-        pub fakes: Vec<Option<usize>>, //8 bytes overhead per element
-
+        pub key_vec: KeyVec,
     }
 
 //ARGS AND TRAIT BOUNDS
@@ -260,9 +258,7 @@ impl<V:Hash + Eq + Clone> FastVec<V> {
                     vector: Vec::new(),
                     map: HashMap::new(),
                     #[cfg(feature = "FastRemove")]
-                    reals_fake: Vec::new() ,
-                    #[cfg(feature = "FastRemove")]
-                    fakes: Vec::new()  
+                    key_vec:  KeyVec::new() ,
                 }
             }
 
@@ -271,9 +267,7 @@ impl<V:Hash + Eq + Clone> FastVec<V> {
                     vector: Vec::with_capacity(size),
                     map: HashMap::with_capacity(size),
                     #[cfg(feature = "FastRemove")]
-                    reals_fake: Vec::with_capacity(size),
-                    #[cfg(feature = "FastRemove")]
-                    fakes: Vec::with_capacity(size)
+                    key_vec:  KeyVec::with_capacity(size)
                 }
             } 
 

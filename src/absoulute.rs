@@ -1,4 +1,4 @@
-use crate::shared::*;
+//use crate::shared::*;
 //use hashbrown::HashMap;
 //use core::hash::Hash;
 use crate::swap_refs;
@@ -6,6 +6,7 @@ use core::fmt;
 use core::ptr;
 //use core::mem;
 
+#[derive(Debug)]
 pub struct KeyVec { 
      pub reals_fake: Vec<usize>, 
      pub fakes: Vec<Option<usize>>
@@ -122,7 +123,7 @@ pub trait AbsoluteKeys{
 
 }
 
-impl  AbsoluteKeys for KeyVec {
+impl AbsoluteKeys for KeyVec {
 
     //FAKES
         fn get_fake(&self, key:usize) -> Result<Option<usize>,Errors> {
@@ -176,5 +177,21 @@ impl  AbsoluteKeys for KeyVec {
             self.reals_fake.push(key)
         }
 
+}
+
+impl KeyVec {
+    pub fn new() -> Self {
+    Self {
+        reals_fake:    Vec::new()  ,
+        fakes:    Vec::new()  
+    }
+    }
+
+    pub fn with_capacity(size:usize) -> Self {
+        Self {
+            reals_fake:    Vec::with_capacity(size),
+            fakes:    Vec::with_capacity(size)
+        }
+    }
 }
 
