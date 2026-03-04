@@ -1,10 +1,7 @@
-//use crate::shared::*;
-//use hashbrown::HashMap;
-//use core::hash::Hash;
 use crate::swap_refs;
 use core::fmt;
 use core::ptr;
-//use core::mem;
+
 
 #[derive(Debug)]
 pub struct KeyVec { 
@@ -31,20 +28,6 @@ pub struct KeyVec {
     }
 
 
-
-// impl <V:Hash+Eq+Clone>AbsoluteVec<V>{
-//      pub     fn swap_remove_by_key(&mut self, key:usize) -> Result<(V,Option<V>),Errors> { //removed_value //keys new value
-//                 let real_key = fake_to_real.get_mut(&key).ok_or()?;
-//                 let (removed_value, new_value) = self.fastvec.swap_remove_by_key( key)? ;
-                
-
-//             }
-
-//     pub     fn swap_remove_by_value(&mut self, value:&V) -> Result<usize,Errors> {  //removed_key
-//                 self.fastvec.swap_remove_by_value( value)
-//             }   
-// }
-
 pub trait AbsoluteKeys{
 
     //Real and RealsFake are copuled. could be a tuple instead: Vec<(V,FakeKey)>
@@ -66,10 +49,6 @@ pub trait AbsoluteKeys{
     fn mod_to_reals_fake(&mut self,key:usize) -> Result<&mut usize,Errors>; 
     fn pop_reals_fake(&mut self) -> ();
     fn push_reals_fake(&mut self, key:usize) -> ();
-    //swap_remove_reals_fake(usize:key) -> Result<usize,Errors>
-
-
-    //swap_remove_from_reals(&mut self, key1:usize) -> Result<V,Errors>
 
     //Using above impl methods
 
@@ -131,11 +110,9 @@ impl AbsoluteKeys for KeyVec {
         }
 
         fn mod_to_fake(&mut self, key:usize) -> Result<&mut Option<usize>,Errors> {
-            if let Some(reference) = self.fakes.get_mut(key) {
-                 Ok(reference)
-            } 
-            else {
-                 Err(Errors::FakeKeyOutOfBounds)}
+            let fake_entry = self.fakes.get_mut(key).ok_or(Errors::FakeKeyOutOfBounds)?; 
+            Ok(fake_entry) 
+ 
         }
 
         fn pop_fake(&mut self) -> (){
@@ -151,8 +128,8 @@ impl AbsoluteKeys for KeyVec {
         }
 
         fn delete_fake(&mut self, key:usize) -> Result<Option<usize>,Errors>{
-                let fake_entry = self.fakes.get_mut(key).ok_or(Errors::FakeKeyOutOfBounds)?;
-                Ok(fake_entry.take())
+            let fake_entry = self.fakes.get_mut(key).ok_or(Errors::FakeKeyOutOfBounds)?;
+            Ok(fake_entry.take())
         }
 
 
@@ -181,10 +158,10 @@ impl AbsoluteKeys for KeyVec {
 
 impl KeyVec {
     pub fn new() -> Self {
-    Self {
-        reals_fake:    Vec::new()  ,
-        fakes:    Vec::new()  
-    }
+        Self {
+            reals_fake:    Vec::new()  ,
+            fakes:    Vec::new()  
+        }
     }
 
     pub fn with_capacity(size:usize) -> Self {
@@ -194,4 +171,3 @@ impl KeyVec {
         }
     }
 }
-
