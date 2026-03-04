@@ -108,7 +108,7 @@ pub trait AbsoluteKeys{
         //swap_remove_from_reals(real1)?; // remove value at real1 replace it with last
 
         *self.mod_to_fake(last_rf)? = Some(real1); // update the real key stored for fake
-        *self.mod_to_reals_fake(real1)? = last_rf; //update fake stored for real key
+        //*self.mod_to_reals_fake(real1)? = last_rf; //update fake stored for real key //FAKE INDEX SHOULD NOT CHNAGE!!!!
         Ok((real1,last_rf))
     }
 
