@@ -48,6 +48,8 @@ pub trait AbsoluteKeys{
 
     //Using above impl methods
 
+    //SWAPS
+
     fn swap_fakes(&mut self, fake1:usize, fake2:usize) -> Result<(),Errors> {
         swap_refs!(self.mod_to_fake(fake1)?, self.mod_to_fake(fake2)?);
         Ok(())
@@ -58,6 +60,8 @@ pub trait AbsoluteKeys{
         Ok(())
     }
 
+    //LAST
+
     fn last_real(&self) -> usize  {
         self.reals_fake_len()-1
     }
@@ -65,6 +69,8 @@ pub trait AbsoluteKeys{
     fn last_fake(&self) -> usize {
         self.fakes_len()-1
     }
+
+    //REMOVES
 
     fn swap_remove_reals_fake(&mut self, reals_fake1:usize) -> Result<(usize,usize),Errors> { //Returns the fakes stored in at reals_fake1 and last_real_fake
         let last_reals_fake_index = self.last_real();
@@ -160,6 +166,19 @@ impl KeyVec {
         Self {
             reals_fake:    Vec::with_capacity(size),
             fakes:    Vec::with_capacity(size)
+        }
+    }
+
+    pub fn extend_initalize(&mut self,extend:usize) -> () {
+        self.reals_fake.reserve(extend);
+        self.fakes.reserve(extend);
+
+        let fakes_new_last = self.fakes_len();
+        let reals_fakes_new_last = self.reals_fake_len();
+
+        for i in 0..extend {
+        self.push_fake(reals_fakes_new_last+i);
+        self.push_reals_fake(fakes_new_last+i);
         }
     }
 }
