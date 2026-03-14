@@ -3,8 +3,8 @@ use testing::shared::Errors;
 use testing::shared::ValueMapKeyVec;
 
 //absoulute::Errors
-use testing::absoulute::KeyVec;
-use testing::absoulute::AbsoluteKeys;
+use testing::absolute::KeyVec;
+use testing::absolute::AbsoluteKeys;
 
 use testing::swap_refs;
 use core::ptr;
@@ -42,7 +42,7 @@ fn main() -> Result<(),Errors>{
     Ok(())
 }
 
-fn absoulute() -> Result<(), testing::absoulute::Errors> {
+fn absoulute() -> Result<(), testing::absolute::AbsoluteErrors> {
     let mut keys = KeyVec::new();
     let mut values = vec![10,20,30,40,50];
     values.iter().enumerate().for_each(|(k,v)|  {
@@ -58,7 +58,7 @@ fn absoulute() -> Result<(), testing::absoulute::Errors> {
     println!("after swap: {:?}", values);
     println!("after swap:  {:?}", keys);
     println!("fake3 value:{}, fake2_real_key:{}", values[keys.get_fake(4)?.unwrap()], keys.get_fake(4)?.unwrap());
-    //The values in real fake refrences is the same
+    //The values in real that fake refrences is the same
     Ok(())
 }
 

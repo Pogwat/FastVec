@@ -8,18 +8,18 @@ use core::ptr;
         pub fakes: Vec<Option<usize>>
     }
 
-//ERRORS
+//AbsoluteErrors
     #[derive(Debug)]
-    pub enum Errors {
+    pub enum AbsoluteErrors {
         FakeKeyOutOfBounds(usize),
         RealsFakeKeyOutOfBounds(usize)
     }
 
-    impl fmt::Display for Errors {
+    impl fmt::Display for AbsoluteErrors {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
-                Errors::FakeKeyOutOfBounds(fake_key) => write!(f, "Fake Key: {} is Out of Bounds", fake_key),
-                Errors::RealsFakeKeyOutOfBounds(reals_fake_key) => write!(f, "Reals Fake Key: {}  is Out of Bounds", reals_fake_key ),
+                AbsoluteErrors::FakeKeyOutOfBounds(fake_key) => write!(f, "Fake Key: {} is Out of Bounds", fake_key),
+                AbsoluteErrors::RealsFakeKeyOutOfBounds(reals_fake_key) => write!(f, "Reals Fake Key: {}  is Out of Bounds", reals_fake_key ),
             }
         }
     }
@@ -33,16 +33,16 @@ pub trait AbsoluteKeys{
     // RealsFake: Vec<usize>
     // Fakes: Vec<usize>
 
-    fn get_fake(&self, key:usize) -> Result<Option<usize>,Errors>;
-    fn mod_to_fake(&mut self, key:usize) -> Result<&mut Option<usize>,Errors>;
+    fn get_fake(&self, key:usize) -> Result<Option<usize>,AbsoluteErrors>;
+    fn mod_to_fake(&mut self, key:usize) -> Result<&mut Option<usize>,AbsoluteErrors>;
     fn pop_fake(&mut self) -> ();
     fn push_fake(&mut self, value:usize) -> ();
     fn fakes_len(&self) -> usize;
-    fn delete_fake(&mut self, key:usize) -> Result<Option<usize>,Errors>;
+    fn delete_fake(&mut self, key:usize) -> Result<Option<usize>,AbsoluteErrors>;
 
     fn reals_fake_len(&self) -> usize;
-    fn get_reals_fake(&self, key:usize) -> Result<usize,Errors>;
-    fn mod_to_reals_fake(&mut self,key:usize) -> Result<&mut usize,Errors>; 
+    fn get_reals_fake(&self, key:usize) -> Result<usize,AbsoluteErrors>;
+    fn mod_to_reals_fake(&mut self,key:usize) -> Result<&mut usize,AbsoluteErrors>; 
     fn pop_reals_fake(&mut self) -> ();
     fn push_reals_fake(&mut self, key:usize) -> ();
 
@@ -50,12 +50,12 @@ pub trait AbsoluteKeys{
 
     //SWAPS
 
-    fn swap_fakes(&mut self, fake1:usize, fake2:usize) -> Result<(),Errors> {
+    fn swap_fakes(&mut self, fake1:usize, fake2:usize) -> Result<(),AbsoluteErrors> {
         swap_refs!(self.mod_to_fake(fake1)?, self.mod_to_fake(fake2)?);
         Ok(())
     }
 
-    fn swap_reals_fake(&mut self, reals_fake1:usize, reals_fake2:usize) -> Result<(),Errors> {
+    fn swap_reals_fake(&mut self, reals_fake1:usize, reals_fake2:usize) -> Result<(),AbsoluteErrors> {
         swap_refs!(self.mod_to_reals_fake(reals_fake1)?, self.mod_to_reals_fake(reals_fake2)?);
         Ok(())
     }
@@ -72,7 +72,7 @@ pub trait AbsoluteKeys{
 
     //REMOVES
 
-    fn swap_remove_reals_fake(&mut self, reals_fake1:usize) -> Result<(usize,usize),Errors> { //Returns the fakes stored in at reals_fake1 and last_real_fake
+    fn swap_remove_reals_fake(&mut self, reals_fake1:usize) -> Result<(usize,usize),AbsoluteErrors> { //Returns the fakes stored in at reals_fake1 and last_real_fake
         let last_reals_fake_index = self.last_real();
         let (fake1, last_reals_fake) = (self.get_reals_fake(reals_fake1)?, self.get_reals_fake(last_reals_fake_index)?);
         self.swap_reals_fake(reals_fake1, last_reals_fake_index)?;
@@ -80,7 +80,7 @@ pub trait AbsoluteKeys{
         Ok((fake1, last_reals_fake))
     }
 
-    fn remove_from_real_fake_by_fake(&mut self, fake1:usize) -> Result<(usize,usize),Errors>{ //Returns new key of last real-fake and its fake key
+    fn remove_from_real_fake_by_fake(&mut self, fake1:usize) -> Result<(usize,usize),AbsoluteErrors>{ //Returns new key of last real-fake and its fake key
         let real1 = self.get_fake(fake1)?.unwrap();    //get real value to remove 
         let last_rf = self.get_reals_fake(self.last_real())?; //get fake key of value that is bveing swapped into real1
 
@@ -93,7 +93,7 @@ pub trait AbsoluteKeys{
         Ok((real1,last_rf))
     }
 
-    // fn remove_by_fake(&mut self, fake1:usize) -> Result<(usize,usize),Errors>{
+    // fn remove_by_fake(&mut self, fake1:usize) -> Result<(usize,usize),AbsoluteErrors>{
     //     let (real_to_remove, real_fake_lasts_new_key) = remove_from_real_fake_by_fake(fake1)?;
     //     self.swap_remove_from_reals(real1)?;
     //     Ok((real_to_remove, real_fake_lasts_new_key))
@@ -104,12 +104,12 @@ pub trait AbsoluteKeys{
 impl AbsoluteKeys for KeyVec {
 
     //FAKES
-        fn get_fake(&self, key:usize) -> Result<Option<usize>,Errors> {
-            Ok(self.fakes.get(key).ok_or(Errors::FakeKeyOutOfBounds(key))?.clone())
+        fn get_fake(&self, key:usize) -> Result<Option<usize>,AbsoluteErrors> {
+            Ok(self.fakes.get(key).ok_or(AbsoluteErrors::FakeKeyOutOfBounds(key))?.clone())
         }
 
-        fn mod_to_fake(&mut self, key:usize) -> Result<&mut Option<usize>,Errors> {
-            let fake_entry = self.fakes.get_mut(key).ok_or(Errors::FakeKeyOutOfBounds(key))?; 
+        fn mod_to_fake(&mut self, key:usize) -> Result<&mut Option<usize>,AbsoluteErrors> {
+            let fake_entry = self.fakes.get_mut(key).ok_or(AbsoluteErrors::FakeKeyOutOfBounds(key))?; 
             Ok(fake_entry) 
  
         }
@@ -126,8 +126,8 @@ impl AbsoluteKeys for KeyVec {
             self.fakes.len()
         }
 
-        fn delete_fake(&mut self, key:usize) -> Result<Option<usize>,Errors>{
-            let fake_entry = self.fakes.get_mut(key).ok_or(Errors::FakeKeyOutOfBounds(key))?;
+        fn delete_fake(&mut self, key:usize) -> Result<Option<usize>,AbsoluteErrors>{
+            let fake_entry = self.fakes.get_mut(key).ok_or(AbsoluteErrors::FakeKeyOutOfBounds(key))?;
             Ok(fake_entry.take())
         }
 
@@ -136,12 +136,12 @@ impl AbsoluteKeys for KeyVec {
             self.reals_fake.len()
         }
 
-        fn get_reals_fake(&self,key:usize) -> Result<usize,Errors> {
-            Ok(*self.reals_fake.get(key).ok_or(Errors::RealsFakeKeyOutOfBounds(key))?)
+        fn get_reals_fake(&self,key:usize) -> Result<usize,AbsoluteErrors> {
+            Ok(*self.reals_fake.get(key).ok_or(AbsoluteErrors::RealsFakeKeyOutOfBounds(key))?)
         }
 
-        fn mod_to_reals_fake(& mut self,key:usize) -> Result<&mut usize,Errors> {
-            Ok(self.reals_fake.get_mut(key).ok_or(Errors::RealsFakeKeyOutOfBounds(key))?)
+        fn mod_to_reals_fake(& mut self,key:usize) -> Result<&mut usize,AbsoluteErrors> {
+            Ok(self.reals_fake.get_mut(key).ok_or(AbsoluteErrors::RealsFakeKeyOutOfBounds(key))?)
         }
 
         fn pop_reals_fake(& mut self) -> () {

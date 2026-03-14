@@ -5,7 +5,7 @@ use core::fmt;
 use core::mem;
 use core::ops::Index;
 use core::ptr;
-#[cfg(feature = "FastRemove")] use crate::absoulute::KeyVec;
+#[cfg(feature = "FastRemove")] use crate::absolute::KeyVec;
 
 //STRUCTS
 
