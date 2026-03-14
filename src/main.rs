@@ -6,6 +6,8 @@ use testing::shared::ValueMapKeyVec;
 use testing::absolute::KeyVec;
 use testing::absolute::AbsoluteKeys;
 
+use testing::absolute_fastvec::FullError;
+
 use testing::swap_refs;
 use core::ptr;
 
@@ -23,6 +25,7 @@ fn main() -> Result<(),Errors>{
     swap_refs!(&mut a[0], &mut a[2]);
     println!("vec after swap: {:?}",a);
     absoulute();
+    absolute_kv();
 
     // let (old_v,_) = fv.mod_to(0, "3".to_string())?;
     // println!("{}",old_v);
@@ -60,5 +63,21 @@ fn absoulute() -> Result<(), testing::absolute::AbsoluteErrors> {
     println!("fake3 value:{}, fake2_real_key:{}", values[keys.get_fake(4)?.unwrap()], keys.get_fake(4)?.unwrap());
     //The values in real that fake refrences is the same
     Ok(())
+}
+
+fn absolute_kv() -> Result<(),FullError>{
+    let mut fv = FastVec::new();
+    for i in 0..5 {
+    fv.absolute_push(i)
+    }
+    println!("{:?}", fv);
+
+    fv.swap_remove_from_key(fv.absolute_get(2)?);
+    fv.key_vec.remove_from_real_fake_by_fake(2);
+    println!("{:?}", fv);
+
+    //fv.
+    Ok(())
+
 }
 
