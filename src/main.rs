@@ -6,7 +6,7 @@ use testing::shared::ValueMapKeyVec;
 use testing::absolute::KeyVec;
 use testing::absolute::AbsoluteKeys;
 
-use testing::absolute_fastvec::FullError;
+use testing::full_error::FullError;
 
 use testing::swap_refs;
 use core::ptr;

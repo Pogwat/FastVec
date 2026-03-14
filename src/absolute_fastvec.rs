@@ -1,5 +1,6 @@
-use crate::shared::*;
+use crate::full_error::FullError;
 use crate::absolute::*; 
+use crate::shared::*;
 
     // pub struct FastVec<V> {
     //     pub   vector: Vec<V> ,//key, value
@@ -7,26 +8,6 @@ use crate::absolute::*;
     //     #[cfg(feature = "FastRemove")]
     //     pub key_vec: KeyVec,
     // }
-
-#[derive(Debug)]
-pub enum FullError {
-    FastVec(Errors),
-    Absolute(AbsoluteErrors),
-}
-
-impl From<Errors> for FullError {
-    fn from(err: Errors) -> Self {
-        FullError::FastVec(err)
-    }
-}
-
-impl From<AbsoluteErrors> for FullError {
-    fn from(err: AbsoluteErrors) -> Self {
-        FullError::Absolute(err)
-    }
-}
-
-
 
 #[allow(dead_code)]
 impl <V:Insertable>FastVec<V> {
@@ -42,6 +23,12 @@ impl <V:Insertable>FastVec<V> {
     pub fn absolute_push(&mut self ,value:V) -> (){
         self.key_vec.extend_initalize(1); 
         self.push_a_value(value);
+    }
+
+    pub fn absolute_remove(&mut self ,fake:usize) -> Result<(usize,V),FullError>{
+        let (real,_) =  self.key_vec.remove_from_real_fake_by_fake(fake)?;
+        let real_value = self.swap_remove_from_key(real)?;
+        Ok((real,real_value))  
     }
 
     // absolute_mod_to_real(fake:usize){}
