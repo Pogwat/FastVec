@@ -3,8 +3,8 @@ use testing::shared::Errors;
 use testing::shared::ValueMapKeyVec;
 
 //absoulute::Errors
-use testing::absolute::KeyVec;
-use testing::absolute::AbsoluteKeys;
+#[cfg(feature = "FastRemove")] use testing::absolute::KeyVec;
+#[cfg(feature = "FastRemove")] use testing::absolute::AbsoluteKeys;
 
 use testing::full_error::FullError;
 
@@ -24,9 +24,10 @@ fn main() -> Result<(),Errors>{
     println!("vec before swap: {:?}",a);
     swap_refs!(&mut a[0], &mut a[2]);
     println!("vec after swap: {:?}",a);
-    absoulute();
-    absolute_kv();
-    abs();
+    
+    #[cfg(feature = "FastRemove")] absoulute();
+    #[cfg(feature = "FastRemove")] absolute_kv();
+    #[cfg(feature = "FastRemove")] abs();
 
     // let (old_v,_) = fv.mod_to(0, "3".to_string())?;
     // println!("{}",old_v);
@@ -45,7 +46,7 @@ fn main() -> Result<(),Errors>{
     // println!("new capacity is {}",fv.capacity());
     Ok(())
 }
-
+#[cfg(feature = "FastRemove")]
 fn absoulute() -> Result<(), testing::absolute::AbsoluteErrors> {
     let mut keys = KeyVec::new();
     let mut values = vec![10,20,30,40,50];
@@ -65,7 +66,7 @@ fn absoulute() -> Result<(), testing::absolute::AbsoluteErrors> {
     //The values in real that fake refrences is the same
     Ok(())
 }
-
+#[cfg(feature = "FastRemove")]
 fn absolute_kv() -> Result<(),FullError>{
     let mut fv = FastVec::new();
     for i in 0..5 {
@@ -81,7 +82,7 @@ fn absolute_kv() -> Result<(),FullError>{
     Ok(())
 
 }
-
+#[cfg(feature = "FastRemove")]
 fn abs() -> Result<(),FullError> {
     println!("new abs functions, is basically the same as above function");
     let mut fv = FastVec::new();

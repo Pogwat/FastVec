@@ -153,9 +153,10 @@ pub trait Insertable: Clone + Hash + Eq {}
         }
 
         fn swap_by_keys(&mut self, key1:usize, key2:usize) -> Result<(),Errors> {
-            let (value1,value2) = (get_by_key(key1)? , get_by_key(key2)?);
+            let (value1,value2) = (self.get_by_key(key1)? , self.get_by_key(key2)?);
             self.swap_keys(key1,key2)?;
-            self.swap_values(value1,value2)?;
+            self.swap_values(&value1,&value2)?;
+            Ok(())
         }
 
         fn last_index(&self) -> usize { //get last elemnt of vector

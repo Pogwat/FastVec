@@ -4,7 +4,7 @@ use crate::shared::Errors;
 #[derive(Debug)]
 pub enum FullError {
     FastVec(Errors),
-    Absolute(AbsoluteErrors),
+    #[cfg(feature = "FastRemove")]  Absolute(AbsoluteErrors),
 }
 
 impl From<Errors> for FullError {
