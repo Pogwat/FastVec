@@ -22,7 +22,7 @@ impl <V:Insertable>FastVec<V> {
 
     pub fn absolute_push(&mut self ,value:V) -> (){
         self.key_vec.extend_initalize(1); 
-        self.push_a_value(value);
+        self.push_by_value(value);
     }
 
     pub fn absolute_remove(&mut self ,fake:usize) -> Result<(usize,V),FullError>{

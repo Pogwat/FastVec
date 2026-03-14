@@ -26,6 +26,7 @@ fn main() -> Result<(),Errors>{
     println!("vec after swap: {:?}",a);
     absoulute();
     absolute_kv();
+    abs();
 
     // let (old_v,_) = fv.mod_to(0, "3".to_string())?;
     // println!("{}",old_v);
@@ -79,5 +80,18 @@ fn absolute_kv() -> Result<(),FullError>{
     //fv.
     Ok(())
 
+}
+
+fn abs() -> Result<(),FullError> {
+    println!("new abs functions");
+    let mut fv = FastVec::new();
+    for i in 0..5 {
+        fv.absolute_push(i)
+    }
+    println!("{:?}", fv);
+
+    fv.absolute_remove(2);
+    println!("{:?}", fv);
+    Ok(())
 }
 
