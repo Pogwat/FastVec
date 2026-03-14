@@ -83,7 +83,7 @@ fn absolute_kv() -> Result<(),FullError>{
 }
 
 fn abs() -> Result<(),FullError> {
-    println!("new abs functions");
+    println!("new abs functions, is basically the same as above function");
     let mut fv = FastVec::new();
     for i in 0..5 {
         fv.absolute_push(i)
