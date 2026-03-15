@@ -25,6 +25,16 @@ fn main() -> Result<(),Errors>{
     swap_refs!(&mut a[0], &mut a[2]);
     println!("vec after swap: {:?}",a);
     
+    
+    
+    fv.push_by_value("hi2".to_string());
+    fv.push_by_value("hi3".to_string());
+    fv.push_by_value("hi4".to_string());
+    println!("fv:{:?}",fv);
+    fv.swap_remove_by_key(1);
+    println!("fv:{:?}",fv);
+
+    
     #[cfg(feature = "FastRemove")] absoulute();
     #[cfg(feature = "FastRemove")] absolute_kv();
     #[cfg(feature = "FastRemove")] abs();
@@ -74,7 +84,7 @@ fn absolute_kv() -> Result<(),FullError>{
     }
     println!("{:?}", fv);
 
-    fv.swap_remove_from_key(fv.absolute_get(2)?);
+    fv.swap_remove_by_key(fv.absolute_get(2)?);
     fv.key_vec.remove_from_real_fake_by_fake(2);
     println!("{:?}", fv);
 

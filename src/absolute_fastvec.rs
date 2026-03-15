@@ -27,7 +27,7 @@ impl <V:Insertable>FastVec<V> {
 
     pub fn absolute_remove(&mut self ,fake:usize) -> Result<(usize,V),FullError>{
         let (real,_) =  self.key_vec.remove_from_real_fake_by_fake(fake)?;
-        let real_value = self.swap_remove_from_key(real)?;
+        let real_value = self.swap_remove_by_key(real)?;
         Ok((real,real_value))  
     }
 

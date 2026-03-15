@@ -152,38 +152,31 @@ pub trait Insertable: Clone + Hash + Eq {}
             Ok(())
         }
 
-        fn swap_by_keys(&mut self, key1:usize, key2:usize) -> Result<(),Errors> {
-            let (value1,value2) = (self.get_by_key(key1)? , self.get_by_key(key2)?);
+        fn swap_by_keys(&mut self, key1:usize, key2:usize) -> Result<(V,V),Errors> { //Swap keys andvalues. Returns new value at key1 and new value at key2
+            let (key1_value,key2_value) = (self.get_by_key(key1)? , self.get_by_key(key2)?);
             self.swap_keys(key1,key2)?;
-            self.swap_values(&value1,&value2)?;
-            Ok(())
+            self.swap_values(&key1_value,&key2_value)?;
+            Ok((key2_value,key1_value)) //Keys are swapped
+        }
+
+        fn swap_remove_by_key(&mut self, key1:usize) -> Result<(V,V),Errors>  {
+            let last_index = self.last_index();
+            let (key1_value,last_value) = self.swap_by_keys(key1,last_index)?; //Swap Keys and their values in the map, return the new value of these keys, as key1s new value, key2's new value
+            self.pop_from_keys(); 
+            self.remove_by_value(&last_value)?;
+            Ok((key1_value,last_value))
         }
 
         fn last_index(&self) -> usize { //get last elemnt of vector
             self.len_of_vec()-1
         }
 
-        fn key_swap_remove(&mut self, key:usize ) -> Result<V,Errors> { //swaps key with last and pops for a vector
-            let value = self.get_by_key(key)?;
-            let last_index = self.last_index();
-            self.swap_keys(key,last_index)?;
-            self.pop_from_keys(); //should probably require a pop impl and use .pop() instead of .remove()
-            Ok(value)
-        }
-
         //remove_by_key() //UNSAFE
 
-        fn swap_remove_from_value(&mut self, value:&V) -> Result<V,Errors> { //remove from hashmap + swaprm on vec. by value
-            let key = self.remove_by_value(value)?;
-            let value_ = self.key_swap_remove(key)?;
-            Ok(value_)
-        }
-
-        fn swap_remove_from_key(&mut self, key:usize) -> Result<V,Errors> { //swap-rm key from vec, use value at key to remove from hashmap
-            let value = self.key_swap_remove(key)?;
-            self.remove_by_value(&value)?;
-            Ok(value)
-
+        fn swap_remove_from_value(&mut self, value:&V) -> Result<(usize,V),Errors> { //remove from hashmap + swaprm on vec. by value
+            let key = self.get_by_value(&value)?;
+            let (key1_value,last_value) = self.swap_remove_by_key(key)?;
+            Ok((key,last_value))
         }
 
         fn push_by_value(&mut self, value:V) -> usize {    
