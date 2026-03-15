@@ -50,6 +50,12 @@ pub trait AbsoluteKeys{
 
     //SWAPS
 
+    fn wrapped_get_fake(&self, fake:usize) -> Result<usize,AbsoluteErrors> {
+        if let Some(real_key) = self.get_fake(fake)? {
+            Ok(real_key)
+        } else {return Err(AbsoluteErrors::FakeKeyOutOfBounds(fake))}
+    }
+
     fn swap_fakes(&mut self, fake1:usize, fake2:usize) -> Result<(),AbsoluteErrors> {
         swap_refs!(self.mod_to_fake(fake1)?, self.mod_to_fake(fake2)?);
         Ok(())
@@ -81,7 +87,7 @@ pub trait AbsoluteKeys{
     }
 
     fn remove_from_real_fake_by_fake(&mut self, fake1:usize) -> Result<(usize,usize),AbsoluteErrors>{ //Returns new key of last real-fake and its fake key
-        let real1 = self.get_fake(fake1)?.unwrap();    //get real value to remove 
+        let real1 = self.wrapped_get_fake(fake1)?;   //get real value to remove 
         let last_rf = self.get_reals_fake(self.last_real())?; //get fake key of value that is bveing swapped into real1
 
         self.delete_fake(fake1)?; //set the fake key we are removing to None
