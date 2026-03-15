@@ -6,7 +6,7 @@ use testing::shared::ValueMapKeyVec;
 #[cfg(feature = "FastRemove")] use testing::absolute::KeyVec;
 #[cfg(feature = "FastRemove")] use testing::absolute::AbsoluteKeys;
 
-use testing::full_error::FullError;
+#[cfg(feature = "FastRemove")]use testing::full_error::FullError;
 
 use testing::swap_refs;
 use core::ptr;
@@ -31,7 +31,7 @@ fn main() -> Result<(),Errors>{
     fv.push_by_value("hi3".to_string());
     fv.push_by_value("hi4".to_string());
     println!("fv:{:?}",fv);
-    fv.swap_remove_by_key(1);
+    fv.swap_remove_by_key(1)?;
     println!("fv:{:?}",fv);
 
     

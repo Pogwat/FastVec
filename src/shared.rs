@@ -175,7 +175,7 @@ pub trait Insertable: Clone + Hash + Eq {}
 
         fn swap_remove_from_value(&mut self, value:&V) -> Result<(usize,V),Errors> { //remove from hashmap + swaprm on vec. by value
             let key = self.get_by_value(&value)?;
-            let (key1_value,last_value) = self.swap_remove_by_key(key)?;
+            let (_,last_value) = self.swap_remove_by_key(key)?;
             Ok((key,last_value))
         }
 

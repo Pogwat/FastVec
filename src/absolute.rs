@@ -48,13 +48,16 @@ pub trait AbsoluteKeys{
 
     //Using above impl methods
 
-    //SWAPS
+    //GETS
 
     fn wrapped_get_fake(&self, fake:usize) -> Result<usize,AbsoluteErrors> {
         if let Some(real_key) = self.get_fake(fake)? {
             Ok(real_key)
         } else {return Err(AbsoluteErrors::FakeKeyOutOfBounds(fake))}
     }
+    
+    
+    //SWAPS
 
     fn swap_fakes(&mut self, fake1:usize, fake2:usize) -> Result<(),AbsoluteErrors> {
         swap_refs!(self.mod_to_fake(fake1)?, self.mod_to_fake(fake2)?);
