@@ -1,14 +1,14 @@
-use testing::shared::FastVec;
-use testing::shared::Errors;
-use testing::shared::ValueMapKeyVec;
+use fastvec::shared::FastVec;
+use fastvec::shared::Errors;
+use fastvec::shared::ValueMapKeyVec;
 
 //absoulute::Errors
-#[cfg(feature = "FastRemove")] use testing::absolute::KeyVec;
-#[cfg(feature = "FastRemove")] use testing::absolute::AbsoluteKeys;
+#[cfg(feature = "FastRemove")] use fastvec::absolute::KeyVec;
+#[cfg(feature = "FastRemove")] use fastvec::absolute::AbsoluteKeys;
 
-#[cfg(feature = "FastRemove")]use testing::full_error::FullError;
+#[cfg(feature = "FastRemove")]use fastvec::full_error::FullError;
 
-use testing::swap_refs;
+use fastvec::swap_refs;
 use core::ptr;
 
 
@@ -57,7 +57,7 @@ fn main() -> Result<(),Errors>{
     Ok(())
 }
 #[cfg(feature = "FastRemove")]
-fn absoulute() -> Result<(), testing::absolute::AbsoluteErrors> {
+fn absoulute() -> Result<(), fastvec::absolute::AbsoluteErrors> {
     let mut keys = KeyVec::new();
     let mut values = vec![10,20,30,40,50];
     values.iter().enumerate().for_each(|(k,v)|  {
