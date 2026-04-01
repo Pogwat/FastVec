@@ -1,5 +1,5 @@
 use fastvec::shared::FastVec;
-use fastvec::shared::Errors;
+//use fastvec::shared::Errors;
 use fastvec::shared::ValueMapKeyVec;
 
 //absoulute::Errors
@@ -13,7 +13,7 @@ use core::ptr;
 
 
 
-fn main() -> Result<(),Errors>{
+fn main() -> Result<(),FullError>{
     let mut fv: FastVec<String> = FastVec::new();   
     //fv.insert(10,"hi".to_string());
      println!("len:{}", fv.len_of_vec()); //len:0
@@ -35,9 +35,9 @@ fn main() -> Result<(),Errors>{
     println!("fv:{:?}",fv);
 
     
-    #[cfg(feature = "FastRemove")] absoulute();
-    #[cfg(feature = "FastRemove")] absolute_kv();
-    #[cfg(feature = "FastRemove")] abs();
+    #[cfg(feature = "FastRemove")] absoulute()?;
+    #[cfg(feature = "FastRemove")] absolute_kv()?;
+    #[cfg(feature = "FastRemove")] abs()?;
 
     // let (old_v,_) = fv.mod_to(0, "3".to_string())?;
     // println!("{}",old_v);
@@ -60,7 +60,7 @@ fn main() -> Result<(),Errors>{
 fn absoulute() -> Result<(), fastvec::absolute::AbsoluteErrors> {
     let mut keys = KeyVec::new();
     let mut values = vec![10,20,30,40,50];
-    values.iter().enumerate().for_each(|(k,v)|  {
+    values.iter().enumerate().for_each(|(k,_)|  {
         keys.push_fake(k) ;
         keys.push_reals_fake(k) ;
     });
@@ -68,7 +68,7 @@ fn absoulute() -> Result<(), fastvec::absolute::AbsoluteErrors> {
     println!("{:?}", keys);
     println!("fake3 value:{}, fake2_real_key:{}", values[keys.get_fake(4)?.unwrap()], keys.get_fake(4)?.unwrap());
     values.swap_remove(keys.get_fake(2)?.unwrap());
-    keys.remove_from_real_fake_by_fake(2);
+    keys.remove_from_real_fake_by_fake(2)?;
 
     println!("after swap: {:?}", values);
     println!("after swap:  {:?}", keys);
@@ -84,8 +84,8 @@ fn absolute_kv() -> Result<(),FullError>{
     }
     println!("{:?}", fv);
 
-    fv.swap_remove_by_key(fv.absolute_get(2)?);
-    fv.key_vec.remove_from_real_fake_by_fake(2);
+    fv.swap_remove_by_key(fv.absolute_get(2)?)?;
+    fv.key_vec.remove_from_real_fake_by_fake(2)?;
     println!("{:?}", fv);
 
     //fv.
@@ -101,8 +101,9 @@ fn abs() -> Result<(),FullError> {
     }
     println!("{:?}", fv);
 
-    fv.absolute_remove(2);
+    fv.absolute_remove(2)?;
     println!("{:?}", fv);
+    println!("{}", fv.get_fake(1)?.unwrap());
     Ok(())
 }
 

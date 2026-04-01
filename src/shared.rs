@@ -5,7 +5,14 @@ use core::fmt;
 use core::mem;
 use core::ops::Index;
 use core::ptr;
-#[cfg(feature = "FastRemove")] use crate::absolute::{KeyVec,AbsoluteKeys, ambassador_impl_AbsoluteKeys, AbsoluteErrors };
+#[cfg(feature = "FastRemove")] 
+use crate::absolute::{
+    KeyVec,
+    AbsoluteKeys, 
+    ambassador_impl_AbsoluteKeys, 
+    AbsoluteErrors
+    
+};
 
 
 //STRUCTS

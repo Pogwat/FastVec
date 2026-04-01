@@ -25,7 +25,6 @@ use core::ops::Index;
         }
     }
 
-use ambassador::Delegate;
 use ambassador::delegatable_trait;
 #[delegatable_trait]
 pub trait AbsoluteKeys{
@@ -114,8 +113,8 @@ pub trait AbsoluteKeys{
 }
 
 
-
-trait AbsoluteIndex {
+#[delegatable_trait]
+pub trait AbsoluteIndex {
     fn absolute_index(&self, fake_index:usize) -> Result< &<Self as Index<usize>>::Output ,   AbsoluteErrors> 
     where 
     Self: Index<usize>; 
