@@ -21,8 +21,11 @@ use crate::absolute::{
 
     #[allow(dead_code)]
     #[derive(Debug)]
-    #[cfg_attr(feature = "FastRemove", derive(Delegate) )]
-    #[cfg_attr(feature = "FastRemove",delegate(AbsoluteKeys, target = "key_vec") )]
+    #[cfg_attr(feature = "FastRemove",
+        delegate(AbsoluteKeys, target = "key_vec"), 
+        derive(Delegate) 
+    )]
+
     pub struct FastVec<V> {
         pub   vector: Vec<V> ,//key, value
         pub   map: HashMap<V, usize>, //value, key
