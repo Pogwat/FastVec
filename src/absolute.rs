@@ -1,7 +1,7 @@
 use crate::swap_refs;
 use core::fmt;
 use core::ptr;
-
+use core::ops::Index;
     #[derive(Debug)]
     pub struct KeyVec { 
         pub reals_fake: Vec<usize>, 
@@ -23,6 +23,7 @@ use core::ptr;
             }
         }
     }
+
 
 
 pub trait AbsoluteKeys{
@@ -109,6 +110,28 @@ pub trait AbsoluteKeys{
     // }
 
 }
+
+
+
+trait AbsoluteIndex {
+    fn absolute_index(&self, fake_index:usize) -> Result< &<Self as Index<usize>>::Output ,   AbsoluteErrors> 
+    where 
+    Self: Index<usize>; 
+}
+
+impl<T> AbsoluteIndex for T
+where
+    T: Index<usize> + AbsoluteKeys,
+{
+    fn absolute_index(&self, fake_index: usize) -> Result<&<Self as Index<usize>>::Output, AbsoluteErrors> {
+        if let Some(real_index) = self.get_fake(fake_index)? {
+        Ok(&self[real_index])
+        } else {Err(AbsoluteErrors::FakeKeyOutOfBounds(fake_index))}
+    }
+
+}
+
+
 
 impl AbsoluteKeys for KeyVec {
 
