@@ -17,12 +17,12 @@ use crate::absolute::{
 
 //STRUCTS
 
-    use ambassador::Delegate;
+    #[cfg(feature = "FastRemove")] use ambassador::Delegate;
 
     #[allow(dead_code)]
     #[derive(Debug)]
-    #[derive(Delegate)]
-    #[delegate(AbsoluteKeys, target = "key_vec")] 
+    #[cfg_attr(feature = "FastRemove", derive(Delegate) )]
+    #[cfg_attr(feature = "FastRemove",delegate(AbsoluteKeys, target = "key_vec") )]
     pub struct FastVec<V> {
         pub   vector: Vec<V> ,//key, value
         pub   map: HashMap<V, usize>, //value, key

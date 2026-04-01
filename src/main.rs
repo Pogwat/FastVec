@@ -1,12 +1,12 @@
 use fastvec::shared::FastVec;
-//use fastvec::shared::Errors;
 use fastvec::shared::ValueMapKeyVec;
 
 //absoulute::Errors
 #[cfg(feature = "FastRemove")] use fastvec::absolute::KeyVec;
 #[cfg(feature = "FastRemove")] use fastvec::absolute::AbsoluteKeys;
 
-#[cfg(feature = "FastRemove")]use fastvec::full_error::FullError;
+//#[cfg(feature = "FastRemove")]
+use fastvec::full_error::FullError;
 
 use fastvec::swap_refs;
 use core::ptr;
