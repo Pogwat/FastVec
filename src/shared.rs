@@ -5,12 +5,17 @@ use core::fmt;
 use core::mem;
 use core::ops::Index;
 use core::ptr;
-#[cfg(feature = "FastRemove")] use crate::absolute::KeyVec;
+#[cfg(feature = "FastRemove")] use crate::absolute::{KeyVec,AbsoluteKeys, ambassador_impl_AbsoluteKeys, AbsoluteErrors };
+
 
 //STRUCTS
 
+    use ambassador::Delegate;
+
     #[allow(dead_code)]
     #[derive(Debug)]
+    #[derive(Delegate)]
+    #[delegate(AbsoluteKeys, target = "key_vec")] 
     pub struct FastVec<V> {
         pub   vector: Vec<V> ,//key, value
         pub   map: HashMap<V, usize>, //value, key

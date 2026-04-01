@@ -2,6 +2,7 @@ use crate::swap_refs;
 use core::fmt;
 use core::ptr;
 use core::ops::Index;
+
     #[derive(Debug)]
     pub struct KeyVec { 
         pub reals_fake: Vec<usize>, 
@@ -24,8 +25,9 @@ use core::ops::Index;
         }
     }
 
-
-
+use ambassador::Delegate;
+use ambassador::delegatable_trait;
+#[delegatable_trait]
 pub trait AbsoluteKeys{
 
     //Real and RealsFake are copuled. could be a tuple instead: Vec<(V,FakeKey)>
